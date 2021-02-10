@@ -51,3 +51,7 @@ This should probably be refactored out so you can provide your own path to it or
 - Use it as a submodule or just extract the files somewhere.
 - `require` the base directory.
 - Please keep your hands inside, and enjoy the ride.
+
+# License
+
+MIT, see [license.txt](./license.txt)
