@@ -14,7 +14,7 @@ return {
 		behaviour_system = relative_require("ecs.systems.behaviour_system"),
 		physics_system = relative_require("ecs.systems.physics_system"),
 		sprite_system = relative_require("ecs.systems.sprite_system"),
-	}
+	},
 
 	--utility
 	frequency_counter = relative_require("util.frequency_counter"),
