@@ -1,13 +1,15 @@
 --[[
-	shared screenshake module
+	screenshake module
 ]]
 
-local screenshake = {}
+local screenshake = class()
 
-function screenshake:init()
-	self.amplitude = 0
-	self.time = 1
-	self.timer = 0
+function screenshake:new()
+	return self:init{
+		amplitude = 0,
+		time = 1,
+		timer = 0,
+	}
 end
 
 function screenshake:update(dt)
@@ -21,7 +23,7 @@ function screenshake:amount()
 	return math.lerp(self.amplitude, 0, math.clamp01(self.timer / self.time))
 end
 
-local _av = vec2:zero()
+local _av = vec2() --cached to avoid gc
 function screenshake:apply(campos)
 	local am = self:amount()
 	if am > 0 then
