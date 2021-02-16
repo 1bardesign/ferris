@@ -2,6 +2,8 @@
 	animation system
 
 	animate sprites with frame by frame animations
+
+	todo: refactor naming (animation:set_anim() is repetitive)
 ]]
 
 local path = (...):gsub("systems.animation_system", "")
