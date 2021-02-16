@@ -547,7 +547,7 @@ function physics_system.make_response_fn(amount, ratio)
 	local amount_a = ratio * amount
 	local amount_b = ratio * (1.0 - amount)
 	local tmp = vec2:zero()
-	--todo: compile out branchless versions?
+	--todo: compile out branchless versions? luajit should do a fine job of it tbh
 	return function(a, b, col)
 		--a offset
 		if amount_a > 0 then

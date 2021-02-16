@@ -32,7 +32,7 @@ end
 --add an existing component to this entity
 function entity:add_existing_component(name, component, destructor)
 	if self.components[name] ~= nil then
-		error("component name clash for "..name.." on this entity")
+		error("component name clash for '"..name.."' on this entity")
 	end
 	self.components[name] = component
 	self.destructors[name] = destructor
