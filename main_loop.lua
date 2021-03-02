@@ -12,7 +12,9 @@ function main_loop:new(interpolate_render)
 
 	--redefine main loop
 	function love.run()
-		love.load(love.arg.parseGameArguments(arg), arg)
+		if love.load then
+			love.load(love.arg.parseGameArguments(arg), arg)
+		end
 
 		--(dont count love.load time)
 		love.timer.step()
