@@ -9,7 +9,7 @@ local base = require(path .. "base_system")
 local behaviour_system = class()
 
 function behaviour_system:new()
-	return base.add_deferred_removal(
+	self = base.add_deferred_removal(
 		self:init({
 			--list of behaviours
 			elements = {},
@@ -20,6 +20,8 @@ function behaviour_system:new()
 			},
 		})
 	)
+	self.update = self:wrap_deferral(self.update)
+	return self
 end
 
 --add a behaviour to the system
@@ -32,38 +34,37 @@ end
 function behaviour_system:remove(b)
 	--(defer any removals encountered from the call too)
 	--(this can only be called at level 0)
-	self._deferred_remove = 1
+	self:push_defer_remove()
 	self:_single_call(b, "remove")
-	self._deferred_remove = 0
+	self:pop_defer_remove()
 
 	table.remove_value(self.elements, b)
 end
 
 --make a call to a single object for all arguments
-function behaviour_system:_single_call(b, f_name, _a, _b, _c)
+function behaviour_system:_single_call(b, f_name, ...)
 	local rval = nil
 	local called = false
 	local f = b[f_name]
 	if type(f) == "function" then
-		rval = f(b, _a, _b, _c)
+		rval = f(b, ...)
 		called = true
 	end
 	return rval, called
 end
 
 --make a call to an object for all objects
---(support for up to 3 passed arguments)
-function behaviour_system:_multi_call(f_name, debug_name, _a, _b, _c)
+function behaviour_system:_multi_call(f_name, debug_name, ...)
 	self.debug[debug_name] = 0
 	--todo: consider caching filtered lists
 	--      needs some infrastructure to do it "actually faster"
 	--      instead of slower for every cache-rebuilding tick
-	table.foreach(self.elements, function(b)
-		local rval, called = self:_single_call(b, f_name, _a, _b, _c)
+	for i, b in ipairs(self.elements) do
+		local rval, called = self:_single_call(b, f_name, ...)
 		if called then
 			self.debug[debug_name] = self.debug[debug_name] + 1
 		end
-	end)
+	end
 end
 
 function behaviour_system:update(dt)
@@ -75,9 +76,7 @@ function behaviour_system:update(dt)
 		end
 	end
 	--
-	self:with_deferred_remove(function()
-		self:_multi_call("update", "updated", dt)
-	end)
+	self:_multi_call("update", "updated", dt)
 end
 
 function behaviour_system:draw()
@@ -89,18 +88,6 @@ end
 --register tasks for kernel
 function behaviour_system:register(kernel, order)
 	base.do_default_register(self, kernel, order)
-end
-
---debug console
-function behaviour_system:add_console_watch(name, console)
-	console:add_watch(name, function()
-		local d = self.debug
-		return table.concat({
-			#self.elements, " total ",
-			d.updated, " updated ",
-			d.drawn, " drawn"
-		}, "")
-	end)
 end
 
 return behaviour_system

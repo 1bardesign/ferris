@@ -89,9 +89,9 @@ end
 
 --remove all this entity's components
 function entity:remove_all_components()
-	table.foreach(table.keys(self.components), function(name)
+	for _, name in ipairs(table.keys(self.components)) do
 		self:remove_component(name)
-	end)
+	end
 end
 
 --entity event handling
@@ -163,9 +163,9 @@ end
 function entity:event(event, args)
 	local list = self.event_handlers[event]
 	if list ~= nil then
-		table.foreach(list, function(h)
-			h(self, event, args)
-		end)
+		for _, handler in ipairs(list) do
+			handler(self, event, args)
+		end
 	end
 end
 

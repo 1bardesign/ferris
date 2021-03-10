@@ -93,15 +93,4 @@ function beat_system:register(kernel, order)
 	base.do_default_register(self, kernel, order)
 end
 
---
-function beat_system:add_console_watch(name, console)
-	console:add_watch(name, function()
-		local d = self.debug
-		return table.concat({
-			(d.beat_this_frame and "BEAT " or ""),
-			d.last_beat, " updated last beat"
-		}, "")
-	end)
-end
-
 return beat_system

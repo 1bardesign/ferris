@@ -1,8 +1,10 @@
 --[[
 	physics system
+
+	todo: refactor to use batteries.set instead of pairs
 ]]
 
-local path = (...):gsub("systems.physics_system", "")
+local path = (...):gsub("systems.box_physics_system", "")
 local base = require(path .. "base_system")
 
 --physical body
@@ -85,10 +87,9 @@ function body:set_size(size)
 end
 
 --physics system
-local physics_system = class()
+local box_physics_system = class()
 
-
-function physics_system:new()
+function box_physics_system:new()
 	local sys = self:init({
 		--sets of bodies
 		active_bodies = {},
@@ -102,7 +103,7 @@ function physics_system:new()
 end
 
 --call a function for all active bodies
-function physics_system:foreach_active(func)
+function box_physics_system:foreach_active(func)
 	self:with_deferred_remove(function(self)
 		for body in pairs(self.active_bodies) do
 			func(body)
@@ -111,7 +112,7 @@ function physics_system:foreach_active(func)
 end
 
 --call a function for all static bodies
-function physics_system:foreach_static(func)
+function box_physics_system:foreach_static(func)
 	self:with_deferred_remove(function(self)
 		for body in pairs(self.static_bodies) do
 			func(body)
@@ -120,7 +121,7 @@ function physics_system:foreach_static(func)
 end
 
 --call a function for all bodies in a group
-function physics_system:foreach_group(group, func)
+function box_physics_system:foreach_group(group, func)
 	self:with_deferred_remove(function(self)
 		for _,body in ipairs(self:group(group)) do
 			func(body)
@@ -129,14 +130,14 @@ function physics_system:foreach_group(group, func)
 end
 
 --call a function for all bodies
-function physics_system:foreach_all(func)
+function box_physics_system:foreach_all(func)
 	self:with_deferred_remove(function(self)
 		self:foreach_active(func)
 		self:foreach_static(func)
 	end)
 end
 
-function physics_system:update(dt)
+function box_physics_system:update(dt)
 	--time dilation
 	if self.timescale then
 		dt = dt * self.timescale:get()
@@ -160,7 +161,7 @@ function physics_system:update(dt)
 end
 
 --static mode
-function physics_system:set_static(body)
+function box_physics_system:set_static(body)
 	if body.static ~= true then
 		--update sets
 		self.active_bodies[body] = nil
@@ -171,7 +172,7 @@ function physics_system:set_static(body)
 end
 
 --active mode
-function physics_system:set_active(body)
+function box_physics_system:set_active(body)
 	if body.static ~= false then
 		--update sets
 		self.static_bodies[body] = nil
@@ -182,7 +183,7 @@ function physics_system:set_active(body)
 end
 
 --add/remove shape
-function physics_system:add(args)
+function box_physics_system:add(args)
 	local shape = body:new(self, args)
 	--handle static/active
 	if args.static then
@@ -199,14 +200,14 @@ function physics_system:add(args)
 	return shape
 end
 
-function physics_system:remove(body)
+function box_physics_system:remove(body)
 	self:remove_all_groups(body)
 	self.active_bodies[body] = nil
 	self.static_bodies[body] = nil
 end
 
 --group handling
-function physics_system:add_group(shape, group)
+function box_physics_system:add_group(shape, group)
 	if not self.groups[group] then
 		self.groups[group] = {}
 	end
@@ -214,38 +215,38 @@ function physics_system:add_group(shape, group)
 	table.insert(group_tab, shape)
 end
 
-function physics_system:add_groups(shape, groups)
+function box_physics_system:add_groups(shape, groups)
 	for _, group in ipairs(groups) do
 		self:add_group(shape, group)
 	end
 end
 
-function physics_system:remove_group(shape, group)
+function box_physics_system:remove_group(shape, group)
 	if not self.groups[group] then
 		return
 	end
 	table.remove_value(self.groups[group], shape)
 end
 
-function physics_system:remove_groups(shape, groups)
+function box_physics_system:remove_groups(shape, groups)
 	for _, group in ipairs(groups) do
 		self:remove_group(shape, group)
 	end
 end
 
-function physics_system:remove_all_groups(shape)
+function box_physics_system:remove_all_groups(shape)
 	for name, v in pairs(self.groups) do
 		self:remove_group(shape, name)
 	end
 end
 
-function physics_system:update_groups(shape, groups)
+function box_physics_system:update_groups(shape, groups)
 	self:remove_all_groups(shape)
 	self:add_groups(shape, groups)
 end
 
 --get a group from a string (or pass anything else unchanged)
-function physics_system:group(v)
+function box_physics_system:group(v)
 	if type(v) == "string" then
 		if not self.groups[v] then
 			self.groups[v] = {}
@@ -257,7 +258,7 @@ end
 
 --point test query
 
-function physics_system:query_point(v, filter)
+function box_physics_system:query_point(v, filter)
 	local ret = {}
 	self:foreach_all(function(body)
 		if filter(body) and body:overlap_point(v) then
@@ -268,7 +269,7 @@ function physics_system:query_point(v, filter)
 end
 
 --call a function for all filtered pairs between groups
-function physics_system:_call_filtered_pairs(group_a, group_b, filter, func)
+function box_physics_system:_call_filtered_pairs(group_a, group_b, filter, func)
 	--defer
 	self:push_defer_remove()
 
@@ -309,7 +310,7 @@ function physics_system:_call_filtered_pairs(group_a, group_b, filter, func)
 end
 
 --call a function for the best n pairs between groups
-function physics_system:_call_minimum_pairs(group_a, group_b, passes, filter, func)
+function box_physics_system:_call_minimum_pairs(group_a, group_b, passes, filter, func)
 	--defer
 	self:push_defer_remove()
 
@@ -383,21 +384,21 @@ end
 --overlap functions
 
 --call a callback for overlapping shapes
-function physics_system:overlap(group_a, group_b, func)
+function box_physics_system:overlap(group_a, group_b, func)
 	self:_call_filtered_pairs(group_a, group_b, function(a, b)
 		return a:overlap(b)
 	end, func)
 end
 
 --call a callback for overlapping active shapes
-function physics_system:overlap_active(group_a, group_b, func)
+function box_physics_system:overlap_active(group_a, group_b, func)
 	self:_call_filtered_pairs(group_a, group_b, function(a, b)
 		return not (a.static and b.static) and a:overlap(b)
 	end, func)
 end
 
 --call a callback for overlapping shapes (both active)
-function physics_system:overlap_both_active(group_a, group_b, func)
+function box_physics_system:overlap_both_active(group_a, group_b, func)
 	self:_call_filtered_pairs(group_a, group_b, function(a, b)
 		return not a.static and not b.static and a:overlap(b)
 	end, func)
@@ -406,35 +407,35 @@ end
 --collide function
 
 --call a callback for colliding shapes with msv
-function physics_system:collide(group_a, group_b, func)
+function box_physics_system:collide(group_a, group_b, func)
 	self:_call_filtered_pairs(group_a, group_b, function(a, b)
 		return a:collide(b)
 	end, func)
 end
 
 --call a callback for colliding active shapes with msv
-function physics_system:collide_active(group_a, group_b, func)
+function box_physics_system:collide_active(group_a, group_b, func)
 	self:_call_filtered_pairs(group_a, group_b, function(a, b)
 		return not (a.static and b.static) and a:collide(b)
 	end, func)
 end
 
 --call a callback for colliding shapes with msv
-function physics_system:collide_both_active(group_a, group_b, func)
+function box_physics_system:collide_both_active(group_a, group_b, func)
 	self:_call_filtered_pairs(group_a, group_b, function(a, b)
 		return not a.static and not b.static and a:collide(b)
 	end, func)
 end
 
 --call a callback for continuously colliding shapes with msv
-function physics_system:collide_continuous(group_a, group_b, func, passes)
+function box_physics_system:collide_continuous(group_a, group_b, func, passes)
 	self:_call_minimum_pairs(group_a, group_b, passes, function(a, b)
 		return a:collide_continuous(b)
 	end, func)
 end
 
 --call a callback for continuously colliding active shapes with msv
-function physics_system:collide_continuous_active(group_a, group_b, func, passes)
+function box_physics_system:collide_continuous_active(group_a, group_b, func, passes)
 	self:_call_minimum_pairs(group_a, group_b, passes, function(a, b)
 		if not (a.static and b.static) then
 			return a:collide_continuous(b)
@@ -443,7 +444,7 @@ function physics_system:collide_continuous_active(group_a, group_b, func, passes
 end
 
 --call a callback for continuously colliding shapes with msv
-function physics_system:collide_continuous_both_active(group_a, group_b, func, passes)
+function box_physics_system:collide_continuous_both_active(group_a, group_b, func, passes)
 	self:_call_minimum_pairs(group_a, group_b, passes, function(a, b)
 		if not a.static and not b.static then
 			return a:collide_continuous(b)
@@ -453,7 +454,7 @@ end
 
 --builtin functions for tracking collisions
 --update collided directions based on collision separating vector
-function physics_system.collision_directions_from_separating_vector(body, sv)
+function box_physics_system.collision_directions_from_separating_vector(body, sv)
 	if sv.x > 0 then
 		body.collided.left = true
 	elseif sv.x < 0 then
@@ -468,41 +469,41 @@ function physics_system.collision_directions_from_separating_vector(body, sv)
 end
 
 --update bodies' collided directions based on col
-function physics_system.record_single_collision_direction(a, b, col)
-	physics_system.collision_directions_from_separating_vector(a, col)
+function box_physics_system.record_single_collision_direction(a, b, col)
+	box_physics_system.collision_directions_from_separating_vector(a, col)
 end
 
-function physics_system.record_both_collision_directions(a, b, col)
+function box_physics_system.record_both_collision_directions(a, b, col)
 	local msv_temp = col:pooled_copy(col)
-	physics_system.collision_directions_from_separating_vector(a, msv_temp)
+	box_physics_system.collision_directions_from_separating_vector(a, msv_temp)
 	msv_temp:smuli(-1)
-	physics_system.collision_directions_from_separating_vector(b, msv_temp)
+	box_physics_system.collision_directions_from_separating_vector(b, msv_temp)
 	msv_temp:release()
 end
 
 --record a collision in the collision list
-function physics_system.record_single_collision(a, b)
+function box_physics_system.record_single_collision(a, b)
 	table.insert(a.collisions, b)
 end
 
-function physics_system.record_both_collisions(a, b)
+function box_physics_system.record_both_collisions(a, b)
 	table.insert(a.collisions, b)
 	table.insert(b.collisions, a)
 end
 
 --record both a collision happening, and the collision direction for each body
-function physics_system.record_single_collision_and_direction(a, b, col)
-	physics_system.record_single_collision_direction(a, b, col)
-	physics_system.record_single_collision(a, b, col)
+function box_physics_system.record_single_collision_and_direction(a, b, col)
+	box_physics_system.record_single_collision_direction(a, b, col)
+	box_physics_system.record_single_collision(a, b, col)
 end
 
-function physics_system.record_both_collisions_and_directions(a, b, col)
-	physics_system.record_both_collision_directions(a, b, col)
-	physics_system.record_both_collisions(a, b, col)
+function box_physics_system.record_both_collisions_and_directions(a, b, col)
+	box_physics_system.record_both_collision_directions(a, b, col)
+	box_physics_system.record_both_collisions(a, b, col)
 end
 
 --resolution only
-function physics_system.make_resolve_fn(amount, ratio)
+function box_physics_system.make_resolve_fn(amount, ratio)
 	local amount_a = ratio * amount
 	local amount_b = ratio * (1.0 - amount)
 	local tmp = vec2:zero()
@@ -523,11 +524,11 @@ end
 
 --builtin resolutions
 --"a only" resolutions
-physics_system.resolve_soft = physics_system.make_resolve_fn(0.5, 1.0)
-physics_system.resolve_hard = physics_system.make_resolve_fn(1.0, 1.0)
+box_physics_system.resolve_soft = box_physics_system.make_resolve_fn(0.5, 1.0)
+box_physics_system.resolve_hard = box_physics_system.make_resolve_fn(1.0, 1.0)
 --"both" resolutions
-physics_system.resolve_both_soft = physics_system.make_resolve_fn(0.5, 0.5)
-physics_system.resolve_both_hard = physics_system.make_resolve_fn(1.0, 0.5)
+box_physics_system.resolve_both_soft = box_physics_system.make_resolve_fn(0.5, 0.5)
+box_physics_system.resolve_both_hard = box_physics_system.make_resolve_fn(1.0, 0.5)
 
 --resolution and response
 local function velocity_response_gamey(body, msv, amount)
@@ -543,7 +544,7 @@ local function velocity_response_gamey(body, msv, amount)
 	end
 end
 
-function physics_system.make_response_fn(amount, ratio)
+function box_physics_system.make_response_fn(amount, ratio)
 	local amount_a = ratio * amount
 	local amount_b = ratio * (1.0 - amount)
 	local tmp = vec2:zero()
@@ -566,27 +567,14 @@ end
 
 --builtin resolutions
 --"a only" resolutions
-physics_system.response_soft = physics_system.make_response_fn(0.5, 1.0)
-physics_system.response_hard = physics_system.make_response_fn(1.0, 1.0)
+box_physics_system.response_soft = box_physics_system.make_response_fn(0.5, 1.0)
+box_physics_system.response_hard = box_physics_system.make_response_fn(1.0, 1.0)
 --"both" resolutions
-physics_system.response_both_soft = physics_system.make_response_fn(0.5, 0.5)
-physics_system.response_both_hard = physics_system.make_response_fn(1.0, 0.5)
-
---console inspection
-function physics_system:add_console_watch(name, console)
-	console:add_watch(name, function()
-		return table.concat({
-			#table.keys(self.static_bodies), "s, ",
-			#table.keys(self.active_bodies), "a - ",
-			table.concat(table.map(table.keys(self.groups), function(k)
-				return k.."("..tostring(#self.groups[k])..")"
-			end), " ")
-		}, "")
-	end)
-end
+box_physics_system.response_both_soft = box_physics_system.make_response_fn(0.5, 0.5)
+box_physics_system.response_both_hard = box_physics_system.make_response_fn(1.0, 0.5)
 
 --visual inspection
-function physics_system:debug_draw(scale)
+function box_physics_system:debug_draw(scale)
 	for i,v in ipairs({
 		{self.static_bodies, 0x8000ffff},
 		{self.active_bodies, 0x80ff00ff},
@@ -603,4 +591,4 @@ function physics_system:debug_draw(scale)
 	end
 end
 
-return physics_system
+return box_physics_system

@@ -229,16 +229,5 @@ function animation_system:register(kernel, order)
 	base.do_default_register(self, kernel, order)
 end
 
---debug console
-function animation_system:add_console_watch(name, console)
-	console:add_watch(name, function()
-		local d = self.debug
-		return table.concat({
-			d.updated, " updated ",
-			d.on_screen, " on screen",
-		}, "")
-	end)
-end
-
 return animation_system
 

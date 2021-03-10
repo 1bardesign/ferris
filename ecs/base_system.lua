@@ -17,6 +17,8 @@ function module.add_deferred_removal(system, remove_impl)
 	--add required properties
 	system._to_remove = {}
 	system._deferred_remove = 0
+	system._needs_removing = false
+	system._currently_removing = false
 	--copy it now, in case it was previously system.remove
 	system.remove_impl = remove_impl or system.remove
 
@@ -24,6 +26,7 @@ function module.add_deferred_removal(system, remove_impl)
 	function system:remove(comp)
 		if self._deferred_remove > 0 then
 			self._to_remove[comp] = true
+			self._needs_removing = true
 		else
 			self:remove_impl(comp)
 		end
@@ -42,24 +45,42 @@ function module.add_deferred_removal(system, remove_impl)
 			error('popped too many deferred remove levels')
 		end
 		self._deferred_remove = self._deferred_remove - 1
-		if self._deferred_remove == 0 then
-			--(only if there's anything to do)
-			local b = next(self._to_remove)
+		if
+			self._deferred_remove == 0
+			and self._needs_removing
+			and not self._currently_removing
+		then
+			--flag here so we don't re-enter here if we push/pop again inside the remove call
+			self._currently_removing = true
 			--(not using pairs;
-			-- allows deferred removals to trigger _during_ removal)
+			-- allows deferred removals to trigger _during_ removal and get removed here too)
+			local b = next(self._to_remove)
 			while b do
 				self:remove(b)
 				self._to_remove[b] = nil
 				b = next(self._to_remove)
 			end
+			--release flag
+			self._currently_removing = false
+			self._needs_removing = false
 		end
 	end
 
 	--perform some functionality with deferred removal either side
-	function system:with_deferred_remove(func)
+	function system:with_deferred_remove(func, ...)
 		self:push_defer_remove()
-		func(self)
+		func(self, ...)
 		self:pop_defer_remove()
+	end
+
+	--wrap an existing method with deferral
+	--eg `sys.update = sys:wrap_deferral(sys.update)`
+	function system:wrap_deferral(func)
+		return function(self, ...)
+			self:push_defer_remove()
+			func(self, ...)
+			self:pop_defer_remove()
+		end
 	end
 
 	return system

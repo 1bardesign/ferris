@@ -182,9 +182,9 @@ function sprite_system:draw()
 
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.setShader(self.shader)
-	table.foreach(self.sprites_to_render, function(s)
+	for _, s in ipairs(self.sprites_to_render) do
 		s:draw(q, self.draw_screen)
-	end)
+	end
 end
 
 --register tasks for kernel
@@ -210,16 +210,6 @@ function sprite_system:register(kernel, order)
 	kernel:add_task("draw", function(k)
 		self:draw()
 	end, order)
-end
-
---console debug
-function sprite_system:add_console_watch(name, console)
-	console:add_watch(name, function()
-		return table.concat({
-			self.debug.sprites, "s, ",
-			self.debug.rendered, "r"
-		}, "")
-	end)
 end
 
 return sprite_system
