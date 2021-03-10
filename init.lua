@@ -21,6 +21,9 @@ return {
 	screenshake = relative_require("util.screenshake"),
 	pubsub = relative_require("util.pubsub"),
 
+	--input
+	keyboard = relative_require("input.keyboard"),
+
 	--important bits
 	main_loop = relative_require("main_loop"),
 }
