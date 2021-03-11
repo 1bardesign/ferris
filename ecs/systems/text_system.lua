@@ -14,6 +14,7 @@ function text_component:new(args)
 		font = font,
 		text = love.graphics.newText(font, args.text or ""),
 		pos = args.pos or vec2(),
+		colour = args.colour or args.color or {1, 1, 1, 1},
 		halign = args.halign or args.align or "center",
 		valign = args.valign or "center",
 	})
@@ -43,10 +44,11 @@ function text_component:draw()
 		y = y - h / 2
 	end
 	--position
-	lg.push()
-	lg.translate(math.floor(x), math.floor(y))
-	lg.draw(self.text)
-	lg.pop()
+	love.graphics.push()
+	love.graphics.translate(math.floor(x), math.floor(y))
+	love.graphics.setColor(self.colour)
+	love.graphics.draw(self.text)
+	love.graphics.pop()
 end
 
 local text_system = class()
@@ -77,9 +79,11 @@ function text_system:update(dt)
 end
 
 function text_system:draw()
+	love.graphics.push("all")
 	for _, v in ipairs(self.elements) do
 		v:draw()
 	end
+	love.graphics.pop()
 end
 
 --register tasks for kernel

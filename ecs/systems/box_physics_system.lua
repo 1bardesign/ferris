@@ -575,6 +575,7 @@ box_physics_system.response_both_hard = box_physics_system.make_response_fn(1.0,
 
 --visual inspection
 function box_physics_system:debug_draw(scale)
+	love.graphics.push("all")
 	for i,v in ipairs({
 		{self.static_bodies, 0x8000ffff},
 		{self.active_bodies, 0x80ff00ff},
@@ -589,6 +590,7 @@ function box_physics_system:debug_draw(scale)
 			)
 		end
 	end
+	love.graphics.pop()
 end
 
 return box_physics_system

@@ -80,9 +80,9 @@ function behaviour_system:update(dt)
 end
 
 function behaviour_system:draw()
-	love.graphics.setColor(1, 1, 1, 1)
-	love.graphics.setShader()
+	love.graphics.push("all")
 	self:_multi_call("draw", "drawn")
+	love.graphics.pop()
 end
 
 --register tasks for kernel

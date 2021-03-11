@@ -180,11 +180,13 @@ end
 function sprite_system:draw()
 	local q = love.graphics.newQuad(0,0,1,1,1,1)
 
+	love.graphics.push("all")
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.setShader(self.shader)
 	for _, s in ipairs(self.sprites_to_render) do
 		s:draw(q, self.draw_screen)
 	end
+	love.graphics.pop()
 end
 
 --register tasks for kernel
