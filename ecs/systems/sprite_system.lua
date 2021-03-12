@@ -2,8 +2,8 @@
 	sprite ecs
 ]]
 
-local path = (...):gsub("systems.sprite_system", "")
-local base = require(path .. "base_system")
+local path = (...)
+local base = require(path:gsub("systems.sprite_system", "base_system"))
 
 --sprite type
 local sprite = class()

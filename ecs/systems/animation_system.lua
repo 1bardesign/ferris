@@ -6,8 +6,8 @@
 	todo: refactor naming (animation:set_anim() is repetitive)
 ]]
 
-local path = (...):gsub("systems.animation_system", "")
-local base = require(path .. "base_system")
+local path = (...)
+local base = require(path:gsub("systems.animation_system", "base_system"))
 
 --animation class
 animation = class()

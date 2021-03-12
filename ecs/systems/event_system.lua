@@ -4,8 +4,8 @@
 	has both a central "hub" bus and allows creating isolated buses as components
 ]]
 
-local path = (...):gsub(".event_system", "")
-local base = require(path:gsub("systems", "base_system"))
+local path = (...)
+local base = require(path:gsub("systems.event_system", "base_system"))
 
 local event_system = class()
 

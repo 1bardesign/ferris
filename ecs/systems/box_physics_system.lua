@@ -4,8 +4,8 @@
 	todo: refactor to use batteries.set instead of pairs
 ]]
 
-local path = (...):gsub("systems.box_physics_system", "")
-local base = require(path .. "base_system")
+local path = (...)
+local base = require(path:gsub("systems.box_physics_system", "base_system"))
 
 --physical body
 local body = class()

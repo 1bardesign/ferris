@@ -3,8 +3,8 @@
 	with its own separate system
 ]]
 
-local path = (...):gsub(".behaviour_system", "")
-local base = require(path:gsub("systems", "base_system"))
+local path = (...)
+local base = require(path:gsub("systems.behaviour_system", "base_system"))
 
 local behaviour_system = class()
 

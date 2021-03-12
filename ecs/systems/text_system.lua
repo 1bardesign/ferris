@@ -1,10 +1,9 @@
 --[[
-	"lazy" behaviour system, for stuff that's too specialised to be bothered
-	with its own separate system
+	graphical text system
 ]]
 
-local path = (...):gsub("systems.text_system", "")
-local base = require(path .. "base_system")
+local path = (...)
+local base = require(path:gsub("systems.text_system", "base_system"))
 
 local text_component = class()
 
@@ -12,22 +11,25 @@ function text_component:new(args)
 	local font = args.font or love.graphics.getFont()
 	self = self:init({
 		font = font,
-		text = love.graphics.newText(font, args.text or ""),
+		text = love.graphics.newText(font, ""),
+		size = vec2(),
 		pos = args.pos or vec2(),
 		colour = args.colour or args.color or {1, 1, 1, 1},
 		halign = args.halign or args.align or "center",
 		valign = args.valign or "center",
-	})
+	}):set(args.text or "")
 	return self
 end
 
 function text_component:set(t)
 	self.text:set(t)
+	self.size:sset(self.text:getDimensions())
+	return self
 end
 
 function text_component:draw()
 	local x, y = self.pos:unpack()
-	local w, h = self.text:getDimensions()
+	local w, h = self.size:unpack()
 	--horizontal
 	if self.halign == "left" then
 		--nothing to do

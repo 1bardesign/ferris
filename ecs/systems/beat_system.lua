@@ -6,8 +6,8 @@
 	for beat callbacks
 ]]
 
-local path = (...):gsub("systems.beat_system", "")
-local base = require(path .. "base_system")
+local path = (...)
+local base = require(path:gsub("systems.beat_system", "base_system"))
 
 local beat_system = class()
 
