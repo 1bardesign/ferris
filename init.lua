@@ -20,7 +20,6 @@ return {
 	--utility
 	frequency_counter = relative_require("util.frequency_counter"),
 	screenshake = relative_require("util.screenshake"),
-	pubsub = relative_require("util.pubsub"),
 
 	--input
 	keyboard = relative_require("input.keyboard"),

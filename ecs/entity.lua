@@ -1,4 +1,8 @@
+--[[
+	core entity class
 
+	handles ordered creation and destruction of components from a given set of systems
+]]
 local entity = class()
 
 --unique name handler
@@ -12,10 +16,12 @@ end
 --construct a new entity
 function entity:new(systems)
 	return self:init({
+		--
 		systems = systems,
+		--component and destructor storage
 		components = {},
+		origin_system = {},
 		destructors = {},
-		event_handlers = {},
 	})
 end
 
@@ -30,13 +36,20 @@ function entity:c(name)
 end
 
 --add an existing component to this entity
-function entity:add_existing_component(name, component, destructor)
+function entity:add_existing_component(name, component, system, destructor)
 	if self.components[name] ~= nil then
 		error("component name clash for '"..name.."' on this entity")
 	end
 	self.components[name] = component
+	self.origin_system[name] = system
 	self.destructors[name] = destructor
 	return component
+end
+
+--default destructor for components
+--just remove from the system they were added from
+local function call_default_destructor(entity, component, system)
+	system:remove(component)
 end
 
 --add a component to this entity using its accessible systems
@@ -55,24 +68,23 @@ function entity:add_component(system, name, args)
 	return self:add_existing_component(
 		name,
 		comp,
-		--default destructor
-		--remove from the system
-		function()
-			sys:remove(comp)
-		end
+		sys,
+		call_default_destructor
 	)
 end
 
 --remove a component by name
 function entity:remove_component(name)
-	--capture dtor
-	local dtor = self.destructors[name]
-	--shred out of the maps before calling
+	--capture, then shred out before calling
+	local component = self.components[name]
+	local system = self.origin_system[name]
+	local destructor = self.destructors[name]
 	self.components[name] = nil
+	self.origin_system[name] = nil
 	self.destructors[name] = nil
 	--call dtor if there is one
-	if (type(dtor) == "function") then
-		dtor()
+	if type(destructor) == "function" then
+		destructor(self, component, system)
 	end
 end
 
@@ -94,83 +106,7 @@ function entity:remove_all_components()
 	end
 end
 
---entity event handling
---for "fuzzy" function calls which may not even do anything
---most commonly for stuff like "hit" and "kill" where you want
---both a varied response, and the possibility of ignoring things
-
-function entity:add_event_handler(event, handler)
-	--multi-add
-	if type(event) == "table" then
-		table.foreach(event, function(e)
-			self:add_event_handler(e, handler)
-		end)
-		return
-	end
-	--single add
-	local list = self.event_handlers[event]
-	if list == nil then
-		list = {}
-		self.event_handlers[event] = list
-	end
-	table.insert(list, handler)
-end
-
---remove an event handler for a specific event
---it is an error if there is no handler to be removed
---as this call is very specific; seems like you may
-function entity:remove_event_handler(event, handler)
-	local list = self.event_handlers[event]
-	if list == nil then
-		error("cannot remove event handler, no handlers present for event "..event);
-	end
-	table.remove_value(list, handler)
-	if #list == 0 then
-		--remove list
-		self.event_handlers[event] = nil
-	end
-end
-
---clear a specific handler from multiple events
-function entity:remove_multi_event_handler(handler)
-	for event,list in pairs(self.event_handlers) do
-		for i,h in ipairs(list) do
-			if h == handler then
-				table.remove(list, i)
-				break
-			end
-		end
-	end
-end
-
---remove all handlers for a specific event
-function entity:remove_event_handlers(event)
-	self.event_handlers[event] = nil
-end
-
---remove all handlers completely
-function entity:remove_all_event_handlers()
-	self.event_handlers = {}
-end
-
---check if an entity has handlers for an event (can be useful for providing a default impl)
-function entity:has_handler(event)
-	return self.event_handlers[event] ~= nil
-end
-
---call handlers
---each handler gets called with the entity, the event, and whatever args were passed in
-function entity:event(event, args)
-	local list = self.event_handlers[event]
-	if list ~= nil then
-		for _, handler in ipairs(list) do
-			handler(self, event, args)
-		end
-	end
-end
-
 --entity destruction
-
 --(helper)
 function entity:_check_double_destroyed()
 	if self._destroyed then
