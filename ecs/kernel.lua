@@ -21,7 +21,9 @@
 	k:call("task name", ...)
 ]]
 
-kernel = class()
+local path = (...)
+local entity = require(path:gsub("kernel", "entity"))
+local kernel = class()
 
 function kernel:new(vars)
 	return self:init(vars or {}):reset()
@@ -87,6 +89,12 @@ end
 --run the draw task
 function kernel:draw()
 	return self:run_task("draw")
+end
+
+--create an entity;
+--	shorthand for the common case of passing in our systems to the constructor directly
+function kernel:entity()
+	return entity(self.systems)
 end
 
 return kernel

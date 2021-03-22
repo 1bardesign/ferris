@@ -3,7 +3,7 @@
 ]]
 
 local path = (...)
-local base = require(path:gsub("systems.text_system", "base_system"))
+local base = require(path:gsub("text_system", "base"))
 
 local text_component = class()
 

@@ -5,7 +5,7 @@
 ]]
 
 local path = (...)
-local base = require(path:gsub("systems.box_physics_system", "base_system"))
+local base = require(path:gsub("box_physics_system", "base"))
 
 --physical body
 local body = class()

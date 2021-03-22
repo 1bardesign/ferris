@@ -2,7 +2,7 @@
 	base functionality often needed for a sucessful system.
 ]]
 
-local module = {}
+local base = {}
 
 --[[
 	deferred removal
@@ -12,7 +12,7 @@ local module = {}
 		or similar
 ]]
 
-function module.add_deferred_removal(system, remove_impl)
+function base.add_deferred_removal(system, remove_impl)
 
 	--add required properties
 	system._to_remove = {}
@@ -90,7 +90,7 @@ end
 --perform default registration with a kernel
 --just calls the update and draw functions of the system as appropriate
 --which is often all you need for a simple system
-function module.do_default_register(sys, kernel, order)
+function base.do_default_register(sys, kernel, order)
 	if type(sys.update) == "function" then
 		kernel:add_task("update", function(k, dt)
 			sys:update(dt)
@@ -103,4 +103,4 @@ function module.do_default_register(sys, kernel, order)
 	end
 end
 
-return module
+return base

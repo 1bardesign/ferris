@@ -5,7 +5,7 @@
 ]]
 
 local path = (...)
-local base = require(path:gsub("systems.event_system", "base_system"))
+local base = require(path:gsub("event_system", "base"))
 
 local event_system = class()
 

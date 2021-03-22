@@ -7,7 +7,7 @@
 ]]
 
 local path = (...)
-local base = require(path:gsub("systems.beat_system", "base_system"))
+local base = require(path:gsub("beat_system", "base"))
 
 local beat_system = class()
 

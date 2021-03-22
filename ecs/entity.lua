@@ -53,7 +53,7 @@ local function call_default_destructor(entity, component, system)
 end
 
 --add a component to this entity using its accessible systems
-function entity:add_component(system, name, args)
+function entity:add_component(system, name, ...)
 	local sys = self.systems[system]
 	if sys == nil then
 		error("system "..system.." not registered for this entity")
@@ -64,7 +64,7 @@ function entity:add_component(system, name, args)
 	end
 
 	--add it and move on
-	local comp = sys:add(args)
+	local comp = sys:add(...)
 	return self:add_existing_component(
 		name,
 		comp,

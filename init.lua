@@ -7,15 +7,21 @@ return {
 	--ecs
 	kernel = relative_require("ecs.kernel"),
 	entity = relative_require("ecs.entity"),
-	base_system = relative_require("ecs.base_system"),
+	--base system code
+	base_system = relative_require("ecs.systems.base"),
+	--prefab systems
 	systems = {
-		animation_system = relative_require("ecs.systems.animation_system"),
-		beat_system = relative_require("ecs.systems.beat_system"),
-		behaviour_system = relative_require("ecs.systems.behaviour_system"),
 		event_system = relative_require("ecs.systems.event_system"),
-		sprite_system = relative_require("ecs.systems.sprite_system"),
-		text_system = relative_require("ecs.systems.text_system"),
+
+		behaviour_system = relative_require("ecs.systems.behaviour_system"),
+		beat_system = relative_require("ecs.systems.beat_system"),
+
 		box_physics_system = relative_require("ecs.systems.box_physics_system"),
+
+		sprite_system = relative_require("ecs.systems.sprite_system"),
+		animation_system = relative_require("ecs.systems.animation_system"),
+
+		text_system = relative_require("ecs.systems.text_system"),
 	},
 
 	--utility

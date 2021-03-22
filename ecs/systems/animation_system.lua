@@ -7,7 +7,7 @@
 ]]
 
 local path = (...)
-local base = require(path:gsub("systems.animation_system", "base_system"))
+local base = require(path:gsub("animation_system", "base"))
 
 --animation class
 animation = class()
