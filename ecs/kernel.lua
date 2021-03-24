@@ -37,6 +37,11 @@ function kernel:reset()
 	return self
 end
 
+--ordering names
+kernel.order_early = -1e3
+kernel.order_normal = 0
+kernel.order_late = 1e3
+
 --add a system to the kernel
 function kernel:add_system(name, sys, order)
 	if self.systems[name] then
@@ -45,7 +50,7 @@ function kernel:add_system(name, sys, order)
 	self.systems[name] = sys
 	--allow the system to perform some registration if relevant
 	if type(sys.register) == "function" then
-		sys:register(self, order or 0)
+		sys:register(self, order or kernel.order_normal)
 	end
 	return self
 end
@@ -57,7 +62,7 @@ function kernel:add_task(name, func, order)
 		tasks = {}
 		self.tasks[name] = tasks
 	end
-	table.insert(tasks, {order or #tasks, func})
+	table.insert(tasks, {order or kernel.order_normal, func})
 	table.stable_sort(tasks, function(a, b)
 		return a[1] < b[1]
 	end)
