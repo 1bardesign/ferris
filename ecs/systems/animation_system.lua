@@ -115,12 +115,19 @@ function animation:progress()
 	return math.clamp01((self.frame - 1 + self.time / anim.time) / #anim.frames)
 end
 
---helper: set the correct frame
-function animation:_set_frame()
+--helper: get the current frame
+function animation:_get_frame()
 	local anim = self.anim
-	if not anim then return end
+	if not anim then
+		return nil
+	end
 	local frame = math.clamp(self.frame, 1, #anim.frames)
-	local frames = anim.frames[frame]
+	return anim.frames[frame]
+end
+
+--helper: set the correct frame (or a previously extracted frame)
+function animation:_set_frame(frames)
+	frames = frames or self:_get_frame()
 	if not frames then return end
 	self.sprite.frame:sset(frames[1], frames[2])
 end
@@ -210,7 +217,7 @@ function animation_system:update(dt)
 	local d = self.debug
 	d.updated = 0
 	d.on_screen = 0
-	table.foreach(self.elements, function(a)
+	for _, a in ipairs(self.elements) do
 		--only "always update" or on screen sprites
 		if a.enabled then
 			a:update(dt)
@@ -221,7 +228,7 @@ function animation_system:update(dt)
 				d.on_screen = d.on_screen + 1
 			end
 		end
-	end)
+	end
 end
 
 --register tasks for kernel
