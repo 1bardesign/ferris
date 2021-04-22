@@ -28,6 +28,8 @@ function sprite:new(texture)
 		--mirror orientation (could just be scale?..)
 		x_flipped = false,
 		y_flipped = false,
+		--blend
+		alpha = 1,
 		--tex
 		texture = texture,
 		--worldspace
@@ -118,22 +120,23 @@ end
 function sprite_system:flush(camera)
 	if type(self.transform_fn) == "function" then
 		--apply transformation function
-		table.foreach(self.sprites, function(s)
+		for _, s in ipairs(self.sprites) do
 			local tx, ty, rot = self.transform_fn(s)
 			if tx then s._screenpos.x = tx end
 			if ty then s._screenpos.y = ty end
 			if rot then s._screen_rotation = rot + s.rot end
 		end
-		)
 	else
 		--copy
-		table.foreach(self.sprites, function(s)
+		for _, s in ipairs(self.sprites) do
 			s._screenpos:vset(s.pos):vaddi(s.offset)
 			s._screen_rotation = s.rot
-		end)
+		end
 	end
 
 	--collect on screen to render
+	--todo: cache this first draw run, have a flush() call for settings changes
+
 	local filter_function = nil
 	if camera == nil then
 		filter_function = function(s)
@@ -155,7 +158,7 @@ function sprite_system:flush(camera)
 		s.on_screen = result
 		return result
 	end
-	self.sprites_to_render = table.filter(self.sprites, write_filter_result)
+	self.sprites_to_render = functional.filter(self.sprites, write_filter_result)
 
 	--sort to render
 	local _torder = self.texture_order_mapping
@@ -178,12 +181,13 @@ end
 
 --draw all the sprites
 function sprite_system:draw()
-	local q = love.graphics.newQuad(0,0,1,1,1,1)
+	local q = love.graphics.newQuad(0, 0, 1, 1, 1, 1)
 
 	love.graphics.push("all")
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.setShader(self.shader)
 	for _, s in ipairs(self.sprites_to_render) do
+		love.graphics.setColor(1, 1, 1, s.alpha)
 		s:draw(q, self.draw_screen)
 	end
 	love.graphics.pop()
