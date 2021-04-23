@@ -25,8 +25,12 @@ function behaviour_system:new()
 end
 
 --add a behaviour to the system
+local function _behaviour_less(a, b)
+	return a.order < b.order
+end
 function behaviour_system:add(b)
-	table.insert(self.elements, b)
+	b.order = b.order or 0 --patch order if it's not present
+	table.insert_sorted(self.elements, b, _behaviour_less)
 	return b
 end
 
