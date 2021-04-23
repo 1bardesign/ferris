@@ -108,6 +108,9 @@ function animation:is_finished()
 	return self.finished
 end
 
+--alias
+animation.done = animation.is_finished
+
 --get the current proportional progress through the animation
 function animation:progress()
 	local anim = self.anim
