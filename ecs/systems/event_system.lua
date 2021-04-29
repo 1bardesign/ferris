@@ -1,7 +1,5 @@
 --[[
 	pubsub event system, for lazy coupling
-
-	has both a central "hub" bus and allows creating isolated buses as components
 ]]
 
 local path = (...)
@@ -10,28 +8,34 @@ local base = require(path:gsub("event_system", "base"))
 local event_system = class()
 
 function event_system:new()
-	self = base.add_deferred_removal(
-		self:init({
-			--list of event buses
-			elements = {},
-			--shared
-			hub = pubsub(),
-		})
-	)
-	self.update = self:wrap_deferral(self.update)
-	return self
+	return self:init({
+		--shared bus
+		hub = pubsub(),
+	})
 end
 
---add a behaviour to the system
-function event_system:add()
-	local b = pubsub()
-	table.insert(self.elements, b)
-	return b
+--add a listener to the system
+function event_system:add(event, handler)
+	self.hub:subscribe(event, handler)
+	return {event, handler}
 end
 
 --remove a behaviour from the system
 function event_system:remove(b)
-	table.remove_value(self.elements, b)
+	self.hub:unsubscribe(b[1], b[2])
+end
+
+--proxy to hub for direct use
+function event_system:publish(...)
+	return self.hub:publish(...)
+end
+
+function event_system:subscribe(...)
+	return self.hub:subscribe(...)
+end
+
+function event_system:unsubscribe(...)
+	return self.hub:unsubscribe(...)
 end
 
 return event_system
