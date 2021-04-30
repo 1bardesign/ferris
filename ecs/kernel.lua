@@ -55,6 +55,11 @@ function kernel:add_system(name, sys, order)
 	return self
 end
 
+--internal comparison for sorting tasks
+function kernel._task_sort(a, b)
+	return a[1] < b[1]
+end
+
 --add a task to the kernel
 function kernel:add_task(name, func, order)
 	local tasks = self.tasks[name]
@@ -62,10 +67,7 @@ function kernel:add_task(name, func, order)
 		tasks = {}
 		self.tasks[name] = tasks
 	end
-	table.insert(tasks, {order or kernel.order_normal, func})
-	table.stable_sort(tasks, function(a, b)
-		return a[1] < b[1]
-	end)
+	table.insert_sorted(tasks, {order or kernel.order_normal, func}, kernel._task_sort)
 	return self
 end
 
