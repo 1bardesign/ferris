@@ -115,12 +115,12 @@ function entity:_check_double_destroyed()
 end
 
 --set of entities to destroy upon flush_entities
-local entities_to_destroy = {}
+local entities_to_destroy = set()
 
 --deferred
 function entity:destroy()
 	self:_check_double_destroyed()
-	entities_to_destroy[self] = true
+	entities_to_destroy:add(self)
 end
 
 --immediate
@@ -132,11 +132,11 @@ end
 
 --flush all deferred entities - should do this at least once per frame
 function entity.flush_entities()
-	local e = next(entities_to_destroy)
-	while e do
-		e:destroy_now()
-		entities_to_destroy[e] = nil
-		e = next(entities_to_destroy)
+	if entities_to_destroy:size() > 0 then
+		for _, e in entities_to_destroy:ipairs() do
+			e:destroy_now()
+		end
+		entities_to_destroy:clear()
 	end
 end
 
