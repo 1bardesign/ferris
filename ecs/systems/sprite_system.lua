@@ -48,26 +48,30 @@ function sprite:draw(quad, use_screenpos)
 		pos = self._screenpos
 		rot = self._screen_rotation
 	else
-		pos = _sprite_draw_temp_pos:vset(self.pos):vaddi(self.offset)
+		pos = _sprite_draw_temp_pos:vset(self.pos)
 		rot = self.rot
 	end
 
 	local size = self.size
 	local frame = self.frame
 	local framesize = self.framesize
+	local offset = self.offset
 	quad:setViewport(
 		frame.x * framesize.x, frame.y * framesize.y,
 		framesize.x, framesize.y
 	)
+	local scale_x = (size.x / framesize.x)
+	local scale_y = (size.y / framesize.y)
 	love.graphics.draw(
 		self.texture, quad,
 		pos.x, pos.y,
 		rot,
 		--TODO: just have scale here rather than flipped bools
-		(self.x_flipped and -1 or 1) * (size.x / framesize.x),
-		(self.y_flipped and -1 or 1) * (size.y / framesize.y),
+		(self.x_flipped and -1 or 1) * scale_x,
+		(self.y_flipped and -1 or 1) * scale_y,
 		--centred
-		0.5 * framesize.x, 0.5 * framesize.y,
+		0.5 * framesize.x - (offset.x / scale_x),
+		0.5 * framesize.y - (offset.y / scale_y),
 		--no shear
 		0, 0
 	)
@@ -129,7 +133,7 @@ function sprite_system:flush(camera)
 	else
 		--copy
 		for _, s in ipairs(self.sprites) do
-			s._screenpos:vset(s.pos):vaddi(s.offset)
+			s._screenpos:vset(s.pos)
 			s._screen_rotation = s.rot
 		end
 	end
