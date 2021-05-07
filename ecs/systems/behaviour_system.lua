@@ -9,10 +9,8 @@ local base = require(path:gsub("behaviour_system", "base"))
 local behaviour_system = class()
 
 function behaviour_system:new()
-	self = base.add_deferred_removal(
+	return base.add_deferred_management(
 		self:init({
-			--list of behaviours
-			elements = {},
 			--debug info
 			debug = {
 				updated = 0,
@@ -20,29 +18,25 @@ function behaviour_system:new()
 			},
 		})
 	)
-	self.update = self:wrap_deferral(self.update)
-	return self
 end
 
 --add a behaviour to the system
 local function _behaviour_less(a, b)
 	return a.order < b.order
 end
-function behaviour_system:add(b)
+
+function behaviour_system:create_component(b)
 	b.order = b.order or 0 --patch order if it's not present
-	table.insert_sorted(self.elements, b, _behaviour_less)
 	return b
 end
 
---remove a behaviour from the system
-function behaviour_system:remove(b)
-	--(defer any removals encountered from the call too)
-	--(this can only be called at level 0)
-	self:push_defer_remove()
-	self:_single_call(b, "remove")
-	self:pop_defer_remove()
+function behaviour_system:add_component(b)
+	table.insert_sorted(self.all, b, _behaviour_less)
+end
 
-	table.remove_value(self.elements, b)
+function behaviour_system:remove_component(b)
+	self:_single_call(b, "remove")
+	table.remove_value(self.all, b)
 end
 
 --make a call to a single object for all arguments
@@ -63,7 +57,7 @@ function behaviour_system:_multi_call(f_name, debug_name, ...)
 	--todo: consider caching filtered lists
 	--      needs some infrastructure to do it "actually faster"
 	--      instead of slower for every cache-rebuilding tick
-	for i, b in ipairs(self.elements) do
+	for i, b in ipairs(self.all) do
 		local rval, called = self:_single_call(b, f_name, ...)
 		if called then
 			self.debug[debug_name] = self.debug[debug_name] + 1
@@ -72,14 +66,6 @@ function behaviour_system:_multi_call(f_name, debug_name, ...)
 end
 
 function behaviour_system:update(dt)
-	--todo: limit amount updated by flag
-	if self.timescale then
-		dt = dt * self.timescale:get()
-		if dt == 0 then
-			return
-		end
-	end
-	--
 	self:_multi_call("update", "updated", dt)
 end
 

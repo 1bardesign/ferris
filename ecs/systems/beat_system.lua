@@ -12,7 +12,7 @@ local base = require(path:gsub("beat_system", "base"))
 local beat_system = class()
 
 function beat_system:new(frequency)
-	return base.add_deferred_removal(
+	return base.add_deferred_management(
 		self:init({
 			--trigger
 			timer = 0,
@@ -35,18 +35,12 @@ end
 -- optional:
 --  frequency - number, default 1
 --  mask      - sequence of booleans, default {true}
-function beat_system:add(b)
+function beat_system:create_component(b)
 	b.frequency = b.frequency or 1
 	b.mask = b.mask or {true}
 	b._beat_counter = 0
 	b._mask_counter = 0
-	table.insert(self.elements, b)
 	return b
-end
-
---remove a beat by ref
-function beat_system:remove(b)
-	table.remove_value(self.elements, b)
 end
 
 --
@@ -65,27 +59,25 @@ function beat_system:update(dt)
 	--tally most recent beat
 	self.debug.last_beat = 0
 	--(update everything)
-	self:with_deferred_remove(function()
-		table.foreach(self.elements, function(b)
-			--step beat counter
-			if (self.beat % b.frequency) == 0 then
-				--if not masked out this beat
-				if b.mask[b._mask_counter] == true then
-					--call
-					if type(b.beat) == "function" then
-						b:beat()
-					end
-					--tally
-					self.debug.last_beat = self.debug.last_beat + 1
+	for _, b in ipairs(self.all) do
+		--step beat counter
+		if (self.beat % b.frequency) == 0 then
+			--if not masked out this beat
+			if b.mask[b._mask_counter] == true then
+				--call
+				if type(b.beat) == "function" then
+					b:beat()
 				end
-				--next mask
-				b._mask_counter = b._mask_counter + 1
-				if b._mask_counter > #b.mask then
-					b._mask_counter = 1
-				end
+				--tally
+				self.debug.last_beat = self.debug.last_beat + 1
 			end
-		end)
-	end)
+			--next mask
+			b._mask_counter = b._mask_counter + 1
+			if b._mask_counter > #b.mask then
+				b._mask_counter = 1
+			end
+		end
+	end
 end
 
 --register tasks for kernel

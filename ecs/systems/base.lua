@@ -5,86 +5,76 @@
 local base = {}
 
 --[[
-	deferred removal
-		put off removing something til after we're done some processing
-		often best to avoid order-of-operation dependence on removal,
-		if removal can happen mid-update for a system, or from callbacks
-		or similar
+	deferred add/remove management
+		put off changing the list of components til after we're done some processing
+		for iteration consistency etc
+
+		requires a `create_component` method
+		optional `add_component`/`remove_component` can do any special handling required
+		`add`/`remove` should not already exist
+
+		access system.all for the components by default
 ]]
 
-function base.add_deferred_removal(system, remove_impl)
+function base.add_deferred_management(system)
+	system.all = {}
+	system.to_add = {}
+	system.to_remove = {}
 
-	--add required properties
-	system._to_remove = {}
-	system._deferred_remove = 0
-	system._needs_removing = false
-	system._currently_removing = false
-	--copy it now, in case it was previously system.remove
-	system.remove_impl = remove_impl or system.remove
+	--sanity check
+	assert(not system.add, "system should just have `add_component`, not `add`")
+	assert(not system.remove, "system should just have `remove_component`, not `remove`")
 
-	--remove a component (deferred if needed)
-	function system:remove(comp)
-		if self._deferred_remove > 0 then
-			self._to_remove[comp] = true
-			self._needs_removing = true
-		else
-			self:remove_impl(comp)
-		end
+	local add_impl = add_impl or system.add_component or function(self, v)
+		table.insert(self.all, v)
+	end
+	local remove_impl = remove_impl or system.remove_component or function(self, v)
+		table.remove_value(self.all, b)
 	end
 
-	--add a deferred removal level
-	function system:push_defer_remove()
-		self._deferred_remove = self._deferred_remove + 1
+	local _old_update = system.update
+
+	--patch various functionality
+	function system:update(dt)
+		--update
+		--	double flush feels dirty BUT it enables not updating stuff
+		--	that was destroyed earlier in the frame, and getting removal
+		--	callbacks asap after update if they happened then
+		--	it's a NOP if nothing was added/removed anyway
+		self:flush()
+		_old_update(self, dt)
+		self:flush()
 	end
 
-	--remove a deferred removal level
-	--perform the deferred removals if we hit the bottom of the stack
-	function system:pop_defer_remove()
-		--sanity check
-		if self._deferred_remove == 0 then
-			error('popped too many deferred remove levels')
-		end
-		self._deferred_remove = self._deferred_remove - 1
-		if
-			self._deferred_remove == 0
-			and self._needs_removing
-			and not self._currently_removing
-		then
-			--flag here so we don't re-enter here if we push/pop again inside the remove call
-			self._currently_removing = true
-			--(not using pairs;
-			-- allows deferred removals to trigger _during_ removal and get removed here too)
-			local b = next(self._to_remove)
-			while b do
-				self:remove(b)
-				self._to_remove[b] = nil
-				b = next(self._to_remove)
+	function system:add(...)
+		local v = self:create_component(...)
+		table.insert(self.to_add, v)
+		return v
+	end
+
+	function system:remove(v)
+		table.insert(self.to_remove, v)
+	end
+
+	--strip out as needed
+	--this supports multiple "cascades" of resulting adds/removes
+	function system:flush()
+		while #self.to_add > 0 or #self.to_remove > 0 do
+			--swap beforehand, so any newly added things go into here
+			local _to_add = self.to_add
+			local _to_remove = self.to_remove
+			self.to_add = {}
+			self.to_remove = {}
+			for _, v in ipairs(_to_add) do
+				add_impl(self, v)
 			end
-			--release flag
-			self._currently_removing = false
-			self._needs_removing = false
-		end
-	end
-
-	--perform some functionality with deferred removal either side
-	function system:with_deferred_remove(func, ...)
-		self:push_defer_remove()
-		func(self, ...)
-		self:pop_defer_remove()
-	end
-
-	--wrap an existing method with deferral
-	--eg `sys.update = sys:wrap_deferral(sys.update)`
-	function system:wrap_deferral(func)
-		return function(self, ...)
-			self:push_defer_remove()
-			func(self, ...)
-			self:pop_defer_remove()
+			for _, v in ipairs(_to_remove) do
+				remove_impl(self, v)
+			end
 		end
 	end
 
 	return system
-
 end
 
 --perform default registration with a kernel

@@ -46,34 +46,21 @@ function text_component:draw()
 		y = y - h / 2
 	end
 	--position
-	love.graphics.push()
-	love.graphics.translate(math.floor(x), math.floor(y))
 	love.graphics.setColor(self.colour)
-	love.graphics.draw(self.text)
-	love.graphics.pop()
+	love.graphics.draw(self.text, math.floor(x), math.floor(y))
 end
 
 local text_system = class()
 
 function text_system:new()
-	return base.add_deferred_removal(
-		self:init({
-			--list of text elements
-			elements = {},
-		})
+	return base.add_deferred_management(
+		self:init({})
 	)
 end
 
---add a behaviour to the system
-function text_system:add(args)
-	local e = text_component(args)
-	table.insert(self.elements, e)
-	return e
-end
-
---remove a behaviour from the system
-function text_system:remove(e)
-	table.remove_value(self.elements, b)
+--build out component; add/remove handled by add_deferred_management
+function text_system:create_component(...)
+	return text_component(...)
 end
 
 function text_system:update(dt)
@@ -82,7 +69,7 @@ end
 
 function text_system:draw()
 	love.graphics.push("all")
-	for _, v in ipairs(self.elements) do
+	for _, v in ipairs(self.all) do
 		v:draw()
 	end
 	love.graphics.pop()

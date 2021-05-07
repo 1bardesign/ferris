@@ -16,8 +16,6 @@ return {
 		behaviour_system = relative_require("ecs.systems.behaviour_system"),
 		beat_system = relative_require("ecs.systems.beat_system"),
 
-		box_physics_system = relative_require("ecs.systems.box_physics_system"),
-
 		sprite_system = relative_require("ecs.systems.sprite_system"),
 		animation_system = relative_require("ecs.systems.animation_system"),
 
