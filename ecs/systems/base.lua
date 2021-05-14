@@ -29,7 +29,7 @@ function base.add_deferred_management(system)
 		table.insert(self.all, v)
 	end
 	local remove_impl = remove_impl or system.remove_component or function(self, v)
-		table.remove_value(self.all, b)
+		table.remove_value(self.all, v)
 	end
 
 	local _old_update = system.update
