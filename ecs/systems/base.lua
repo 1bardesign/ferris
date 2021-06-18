@@ -32,7 +32,7 @@ function base.add_deferred_management(system)
 		table.remove_value(self.all, v)
 	end
 
-	local _old_update = system.update
+	local _old_update = system.update or function() end
 
 	--patch various functionality
 	function system:update(dt)
