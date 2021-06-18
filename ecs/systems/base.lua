@@ -25,10 +25,10 @@ function base.add_deferred_management(system)
 	assert(not system.add, "system should just have `add_component`, not `add`")
 	assert(not system.remove, "system should just have `remove_component`, not `remove`")
 
-	local add_impl = add_impl or system.add_component or function(self, v)
+	local add_impl = system.add_component or function(self, v)
 		table.insert(self.all, v)
 	end
-	local remove_impl = remove_impl or system.remove_component or function(self, v)
+	local remove_impl = system.remove_component or function(self, v)
 		table.remove_value(self.all, v)
 	end
 
