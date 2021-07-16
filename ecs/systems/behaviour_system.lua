@@ -6,18 +6,16 @@
 local path = (...)
 local base = require(path:gsub("behaviour_system", "base"))
 
-local behaviour_system = class()
+local behaviour_system = class({
+	name = "behaviour_system"
+})
 
 function behaviour_system:new()
-	return base.add_deferred_management(
-		self:init({
-			--debug info
-			debug = {
-				updated = 0,
-				drawn = 0,
-			},
-		})
-	)
+	base.add_deferred_management(self)
+	self.debug = {
+		updated = 0,
+		drawn = 0,
+	}
 end
 
 --add a behaviour to the system

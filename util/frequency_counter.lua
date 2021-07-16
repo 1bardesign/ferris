@@ -1,14 +1,18 @@
-local frequency_counter = class()
+--[[
+	count things happening over a period of time
+]]
+
+local frequency_counter = class({
+	name = "frequency_counter"
+})
 
 function frequency_counter:new(sample_period)
 	sample_period = sample_period or 1
-	return self:init({
-		count = 0,
-		total = 0,
-		last_count = 0,
-		last_time = -1,
-		sample_period = sample_period,
-	})
+	self.count = 0
+	self.total = 0
+	self.last_count = 0
+	self.last_time = -1
+	self.sample_period = sample_period
 end
 
 function frequency_counter:add()

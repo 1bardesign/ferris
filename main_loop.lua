@@ -1,14 +1,14 @@
 local path = (...):gsub(".main_loop", "")
 local frequency_counter = require(path..".util.frequency_counter")
 
-local main_loop = class()
+local main_loop = class({
+	name = "main_loop",
+})
 function main_loop:new(interpolate_render)
-	self = self:init({
-		frametime = 1 / 60,
-		ticks_per_second = frequency_counter(),
-		frames_per_second = frequency_counter(),
-		interpolate_render = interpolate_render or false,
-	})
+	self.frametime = 1 / 60
+	self.ticks_per_second = frequency_counter()
+	self.frames_per_second = frequency_counter()
+	self.interpolate_render = interpolate_render or false
 
 	--redefine main loop
 	function love.run()

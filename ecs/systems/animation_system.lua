@@ -10,19 +10,19 @@ local path = (...)
 local base = require(path:gsub("animation_system", "base"))
 
 --animation class
-animation = class()
+animation = class({
+	name = "animation"
+})
 --create a new animation for a given sprite
 function animation:new(sprite)
-	return self:init({
-		sprite = sprite,
-		time = 0,
-		frame = 0,
-		animations = {},
-		finished = false,
-		anim_name = "",
-		anim = false,
-		enabled = true,
-	})
+	self.sprite = sprite
+	self.time = 0
+	self.frame = 0
+	self.animations = {}
+	self.finished = false
+	self.anim_name = ""
+	self.anim = false
+	self.enabled = true
 end
 
 --run the animation forward dt seconds
@@ -184,22 +184,22 @@ function animation:generate_frames_ordered_2d(sx, sy, ex, ey, frames_x, frames_y
 	return frames
 end
 
-local animation_system = class()
+local animation_system = class({
+	name = "animation_system"
+})
 
 function animation_system:new()
-	return self:init({
-		--list of animations
-		elements = {},
-		--debug info
-		debug = {
-			updated = 0,
-			on_screen = 0,
-		},
-	})
+	--list of animations
+	self.elements = {}
+	--debug info
+	self.debug = {
+		updated = 0,
+		on_screen = 0,
+	}
 end
 
 function animation_system:add(for_sprite)
-	local anim = animation:new(for_sprite)
+	local anim = animation(for_sprite)
 	table.insert(self.elements, anim)
 	return anim
 end

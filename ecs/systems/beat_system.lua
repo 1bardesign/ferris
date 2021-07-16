@@ -9,25 +9,23 @@
 local path = (...)
 local base = require(path:gsub("beat_system", "base"))
 
-local beat_system = class()
+local beat_system = class({
+	name = "beat_system"
+})
 
 function beat_system:new(frequency)
-	return base.add_deferred_management(
-		self:init({
-			--trigger
-			timer = 0,
-			base_frequency = frequency,
-			--beat counter
-			beat = 0,
-			--list of beat trackers
-			elements = {},
-			--debug info
-			debug = {
-				beat_this_frame = false,
-				last_beat = 0,
-			},
-		})
-	)
+	--trigger
+	self.timer = 0
+	self.base_frequency = frequency
+	--beat counter
+	self.beat = 0
+	--debug info
+	self.debug = {
+		beat_this_frame = false,
+		last_beat = 0,
+	}
+	--set up deferred
+	base.add_deferred_management(self)
 end
 
 -- argument must be a table with members:

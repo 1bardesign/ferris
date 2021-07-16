@@ -5,13 +5,12 @@
 local path = (...)
 local base = require(path:gsub("event_system", "base"))
 
-local event_system = class()
+local event_system = class({
+	name = "event_system"
+})
 
 function event_system:new()
-	return self:init({
-		--shared bus
-		hub = pubsub(),
-	})
+	self.hub = pubsub()
 end
 
 --add a listener to the system

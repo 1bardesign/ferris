@@ -3,7 +3,9 @@
 
 	handles ordered creation and destruction of components from a given set of systems
 ]]
-local entity = class()
+local entity = class({
+	name = "entity",
+})
 
 --unique name handler
 local _component_id_gen = 0
@@ -15,14 +17,11 @@ end
 
 --construct a new entity
 function entity:new(systems)
-	return self:init({
-		--
-		systems = systems,
-		--component and destructor storage
-		components = {},
-		origin_system = {},
-		destructors = {},
-	})
+	self.systems = systems
+	--component and destructor storage
+	self.components = {}
+	self.origin_system = {}
+	self.destructors = {}
 end
 
 --by-name access

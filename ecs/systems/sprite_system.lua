@@ -6,36 +6,36 @@ local path = (...)
 local base = require(path:gsub("sprite_system", "base"))
 
 --sprite type
-local sprite = class()
+local sprite = class({
+	name = "sprite"
+})
 
 function sprite:new(texture)
-	return self:init({
-		--xy
-		pos = vec2:zero(),
-		size = vec2:zero(),
-		offset = vec2:zero(),
-		--uv
-		framesize = vec2:xy(1,1),
-		frame = vec2:zero(),
-		--z ordering
-		z = 0,
-		--rotation
-		rot = 0,
-		--enable/disable
-		visible = true,
-		--track if we were on screen last frame
-		on_screen = true,
-		--mirror orientation (could just be scale?..)
-		x_flipped = false,
-		y_flipped = false,
-		--blend
-		alpha = 1,
-		--tex
-		texture = texture,
-		--worldspace
-		_screenpos = vec2:zero(),
-		_screen_rotation = 0,
-	})
+	--xy
+	self.pos = vec2:zero()
+	self.size = vec2:zero()
+	self.offset = vec2:zero()
+	--uv
+	self.framesize = vec2:xy(1,1)
+	self.frame = vec2:zero()
+	--z ordering
+	self.z = 0
+	--rotation
+	self.rot = 0
+	--enable/disable
+	self.visible = true
+	--track if we were on screen last frame
+	self.on_screen = true
+	--mirror orientation (could just be scale?..)
+	self.x_flipped = false
+	self.y_flipped = false
+	--blend
+	self.alpha = 1
+	--tex
+	self.texture = texture
+	--worldspace
+	self._screenpos = vec2:zero()
+	self._screen_rotation = 0
 end
 
 local _sprite_draw_temp_pos = vec2:zero()
@@ -77,42 +77,40 @@ function sprite:draw(quad, use_screenpos)
 	)
 end
 
-local sprite_system = class()
+local sprite_system = class({
+	name = "sprite_system"
+})
 
 function sprite_system:new(args)
 	args = args or {}
-	local s = self:init({
-		--function for getting the screen pos
-		transform_fn = args.transform_fn,
-		--the camera to use for culling, or true to use kernel cam,
-		--or false/nil to use nothing
-		camera = args.camera,
-		--whether to cull or draw on screen or untransformed
-		cull_screen = type(args.cull_screen) == "boolean"
-			and args.cull_screen
-			or true,
-		draw_screen = type(args.draw_screen) == "boolean"
-			and args.draw_screen
-			or true,
-		shader = args.shader,
-		--texture ordering
-		texture_order_mapping = unique_mapping:new(),
-		--list of sprites
-		sprites = {},
-		--filtered list
-		sprites_to_render = {},
-		--debug info
-		debug = {
-			sprites = 0,
-			rendered = 0,
-		},
-	})
-
-	return s
+	--function for getting the screen pos
+	self.transform_fn = args.transform_fn
+	--the camera to use for culling, or true to use kernel cam,
+	--or false/nil to use nothing
+	self.camera = args.camera
+	--whether to cull or draw on screen or untransformed
+	self.cull_screen = type(args.cull_screen) == "boolean"
+		and args.cull_screen
+		or true
+	self.draw_screen = type(args.draw_screen) == "boolean"
+		and args.draw_screen
+		or true
+	self.shader = args.shader
+	--texture ordering
+	self.texture_order_mapping = unique_mapping:new()
+	--list of sprites
+	self.sprites = {}
+	--filtered list
+	self.sprites_to_render = {}
+	--debug info
+	self.debug = {
+		sprites = 0,
+		rendered = 0,
+	}
 end
 
 function sprite_system:add(texture)
-	local s = sprite:new(texture)
+	local s = sprite(texture)
 	table.insert(self.sprites, s)
 	return s
 end

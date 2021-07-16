@@ -2,14 +2,14 @@
 	screenshake module
 ]]
 
-local screenshake = class()
+local screenshake = class({
+	name = "screenshake",
+})
 
 function screenshake:new()
-	return self:init{
-		amplitude = 0,
-		time = 1,
-		timer = 0,
-	}
+	self.amplitude = 0
+	self.time = 1
+	self.timer = 0
 end
 
 function screenshake:update(dt)
@@ -24,12 +24,12 @@ function screenshake:amount()
 end
 
 local _av = vec2() --cached to avoid gc
-function screenshake:apply(campos)
+function screenshake:apply(camera_position)
 	local am = self:amount()
 	if am > 0 then
 		_av:sset(love.math.random() * am)
 			:rotatei(love.math.random() * math.tau)
-		campos:vaddi(_av)
+		camera_position:vaddi(_av)
 	end
 end
 

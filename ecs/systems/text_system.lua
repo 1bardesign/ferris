@@ -5,20 +5,20 @@
 local path = (...)
 local base = require(path:gsub("text_system", "base"))
 
-local text_component = class()
+local text_component = class({
+	name = "text_component"
+})
 
 function text_component:new(args)
 	local font = args.font or love.graphics.getFont()
-	self = self:init({
-		font = font,
-		text = love.graphics.newText(font, ""),
-		size = vec2(),
-		pos = args.pos or vec2(),
-		colour = args.colour or args.color or {1, 1, 1, 1},
-		halign = args.halign or args.align or "center",
-		valign = args.valign or "center",
-	}):set(args.text or "")
-	return self
+	self.font = font
+	self.text = love.graphics.newText(font, "")
+	self.size = vec2()
+	self.pos = args.pos or vec2()
+	self.colour = args.colour or args.color or {1, 1, 1, 1}
+	self.halign = args.halign or args.align or "center"
+	self.valign = args.valign or "center"
+	self:set(args.text or "")
 end
 
 function text_component:set(t)
@@ -50,12 +50,12 @@ function text_component:draw()
 	love.graphics.draw(self.text, math.floor(x), math.floor(y))
 end
 
-local text_system = class()
+local text_system = class({
+	name = "text_system"
+})
 
 function text_system:new()
-	return base.add_deferred_management(
-		self:init({})
-	)
+	base.add_deferred_management(self)
 end
 
 --build out component; add/remove handled by add_deferred_management

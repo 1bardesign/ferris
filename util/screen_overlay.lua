@@ -1,13 +1,17 @@
-local screen_overlay = class()
+--[[
+	a full screen overlay effect
+]]
 
-function screen_overlay:new()
+local screen_overlay = class({
+	name = "screen_overlay",
+})
+
+function screen_overlay:new(size)
 	size = size or vec2(love.graphics.getDimensions())
-	return self:init({
-		old_colour = {0, 0, 0, 0},
-		colour = {0, 0, 0, 0},
-		timer = timer(),
-		size = size,
-	})
+	self.size = size
+	self.old_colour = {0, 0, 0, 0}
+	self.colour = {0, 0, 0, 0}
+	self.timer = timer()
 end
 
 function screen_overlay:fade(colour, time)
@@ -68,7 +72,7 @@ function screen_overlay:_decode_colour(colour)
 	if #colour < 4 then
 		local r, g, b = table.unpack3(colour)
 		colour[2] = g or r
-		colour[3] = b or g
+		colour[3] = b or colour[2]
 		colour[4] = 1
 	end
 	return colour

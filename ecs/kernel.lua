@@ -23,10 +23,17 @@
 
 local path = (...)
 local entity = require(path:gsub("kernel", "entity"))
-local kernel = class()
+local kernel = class({
+	name = "kernel",
+})
 
 function kernel:new(vars)
-	return self:init(vars or {}):reset()
+	if vars then
+		for k, v in pairs(vars) do
+			self[k] = v
+		end
+	end
+	self:reset()
 end
 
 function kernel:reset()

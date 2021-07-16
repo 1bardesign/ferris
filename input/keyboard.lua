@@ -6,7 +6,9 @@
 	allows checking how long something has been pressed or released (in seconds)
 ]]
 
-local keyboard = class()
+local keyboard = class({
+	name = "keyboard"
+})
 
 --the keys we care about
 local _all_keys = {
@@ -139,11 +141,8 @@ local _all_keys = {
 }
 
 function keyboard:new()
-	self = self:init{
-		key_data = {},
-	}
+	self.key_data = {}
 	self:clear()
-	return self
 end
 
 function keyboard:update(dt)
