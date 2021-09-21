@@ -31,6 +31,8 @@ function sprite:new(texture)
 	self.y_flipped = false
 	--blend
 	self.alpha = 1
+	self.blend = "alpha"
+	self.alpha_blend = "alphamultiply"
 	--tex
 	self.texture = texture
 	--worldspace
@@ -190,6 +192,7 @@ function sprite_system:draw()
 	love.graphics.setShader(self.shader)
 	for _, s in ipairs(self.sprites_to_render) do
 		love.graphics.setColor(1, 1, 1, s.alpha)
+		love.graphics.setBlendMode(s.blend, s.alpha_blend)
 		s:draw(q, self.draw_screen)
 	end
 	love.graphics.pop()
