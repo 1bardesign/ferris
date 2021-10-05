@@ -12,12 +12,12 @@ local sprite = class({
 
 function sprite:new(texture)
 	--xy
-	self.pos = vec2:zero()
-	self.size = vec2:zero()
-	self.offset = vec2:zero()
+	self.pos = vec2()
+	self.size = vec2()
+	self.offset = vec2()
 	--uv
-	self.framesize = vec2:xy(1,1)
-	self.frame = vec2:zero()
+	self.framesize = vec2(1, 1)
+	self.frame = vec2()
 	--z ordering
 	self.z = 0
 	--rotation
@@ -29,12 +29,15 @@ function sprite:new(texture)
 	--mirror orientation (could just be scale?..)
 	self.x_flipped = false
 	self.y_flipped = false
-	--blend
+	--blend config
 	self.alpha = 1
 	self.blend = "alpha"
 	self.alpha_blend = "alphamultiply"
 	--tex
 	self.texture = texture
+	if self.texture then
+		self.size:scalar_set(self.texture:getDimensions())
+	end
 	--worldspace
 	self._screenpos = vec2:zero()
 	self._screen_rotation = 0
