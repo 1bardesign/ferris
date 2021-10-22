@@ -33,6 +33,8 @@ function sprite:new(texture)
 	self.alpha = 1
 	self.blend = "alpha"
 	self.alpha_blend = "alphamultiply"
+	--shader config
+	self.shader = nil
 	--tex
 	self.texture = texture
 	if self.texture then
@@ -191,11 +193,10 @@ function sprite_system:draw()
 	local q = love.graphics.newQuad(0, 0, 1, 1, 1, 1)
 
 	love.graphics.push("all")
-	love.graphics.setColor(1, 1, 1, 1)
-	love.graphics.setShader(self.shader)
 	for _, s in ipairs(self.sprites_to_render) do
 		love.graphics.setColor(1, 1, 1, s.alpha)
 		love.graphics.setBlendMode(s.blend, s.alpha_blend)
+		love.graphics.setShader(s.shader or self.shader)
 		s:draw(q, self.draw_screen)
 	end
 	love.graphics.pop()
