@@ -99,4 +99,4 @@ This should probably be refactored out so you can provide your own path to it or
 
 # License
 
-MIT, see [license.txt](./license.txt)
+zlib, see [license.txt](./license.txt)
