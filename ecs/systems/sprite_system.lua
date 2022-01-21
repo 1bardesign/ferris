@@ -10,37 +10,54 @@ local sprite = class({
 	name = "sprite"
 })
 
-function sprite:new(texture)
+local sprite_default_args = {}
+function sprite:new(args)
+	local texture
+	if type(args) == "table" then
+		texture = args.texture
+	else
+		--legacy: just provided with a texture and everything else will be set up later
+		texture = args
+		args = sprite_default_args
+	end
 	--xy
-	self.pos = vec2()
-	self.size = vec2()
-	self.offset = vec2()
+	self.pos = args.pos and args.pos:copy() or vec2(0, 0)
+	self.size = args.size and args.size:copy() or vec2(1, 1)
+	self.offset = args.offset and args.offset:copy() or vec2(0, 0)
 	--uv
-	self.framesize = vec2(1, 1)
-	self.frame = vec2()
+	if args.framesize then
+		self.framesize = args.framesize:copy()
+	elseif args.layout then
+		self.framesize = vec2(1, 1):vector_div_inplace(args.layout)
+	else
+		self.framesize = vec2(1, 1)
+	end
+	self.frame = frame and frame:copy() or vec2(0, 0)
 	--z ordering
-	self.z = 0
+	self.z = args.z or 0
 	--rotation
-	self.rot = 0
+	self.rot = args.rot or 0
 	--enable/disable
 	self.visible = true
 	--track if we were on screen last frame
 	self.on_screen = true
-	--mirror orientation (could just be scale?..)
+	--mirror orientation (should just be scale...)
 	self.x_flipped = false
 	self.y_flipped = false
 	--blend config
-	self.alpha = 1
-	self.blend = "alpha"
-	self.alpha_blend = "alphamultiply"
+	self.alpha = args.alpha or 1
+	self.blend = args.blend or "alpha"
+	self.alpha_blend = args.alpha_blend or "alphamultiply"
 	--shader config
-	self.shader = nil
+	self.shader = args.shader or nil
 	--tex
 	self.texture = texture
 	if self.texture then
-		self.size:scalar_set(self.texture:getDimensions())
+		self.size
+			:scalar_set(self.texture:getDimensions())
+			:vector_mul_inplace(self.framesize)
 	end
-	--worldspace
+	--worldspace cache
 	self._screenpos = vec2:zero()
 	self._screen_rotation = 0
 end
