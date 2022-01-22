@@ -43,7 +43,13 @@ function sprite:new(args)
 	self.on_screen = true
 	--mirror orientation (should just be scale...)
 	self.x_flipped = false
+	if args.x_flipped then
+		self.x_flipped = args.x_flipped
+	end
 	self.y_flipped = false
+	if args.y_flipped then
+		self.y_flipped = args.y_flipped
+	end
 	--blend config
 	self.alpha = args.alpha or 1
 	self.blend = args.blend or "alpha"
