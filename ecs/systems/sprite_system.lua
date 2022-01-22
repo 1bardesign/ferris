@@ -32,7 +32,7 @@ function sprite:new(args)
 	else
 		self.framesize = vec2(1, 1)
 	end
-	self.frame = frame and frame:copy() or vec2(0, 0)
+	self.frame = args.frame and args.frame:copy() or vec2(0, 0)
 	--z ordering
 	self.z = args.z or 0
 	--rotation
