@@ -18,6 +18,9 @@ function sprite:new(args)
 	local texture
 	if type(args) == "table" then
 		texture = args.texture
+			--alias
+			or args.image
+			or args.sheet
 	else
 		--legacy: just provided with a texture and everything else will be set up later
 		texture = args
