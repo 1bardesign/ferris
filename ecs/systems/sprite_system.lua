@@ -27,18 +27,47 @@ function sprite:new(args)
 		args = sprite_default_args
 	end
 	--xy
-	self.pos = args.pos and args.pos:copy() or vec2(0, 0)
-	self.size = args.size and args.size:copy() or vec2(1, 1)
-	self.offset = args.offset and args.offset:copy() or vec2(0, 0)
+	if args.pos_link then
+		self.pos = args.pos_link
+	elseif args.pos then
+		self.pos = args.pos:copy()
+	else
+		self.pos = vec2(0, 0)
+	end
+
+	if args.offset_link then
+		self.offset = args.offset_link
+	elseif args.offset then
+		self.offset = args.offset:copy()
+	else
+		self.offset = vec2(1, 1)
+	end
+
+	if args.size_link then
+		self.size = args.size_link
+	elseif args.size then
+		self.size = args.size:copy()
+	else
+		self.size = vec2(1, 1)
+	end
+
 	--uv
-	if args.framesize then
+	if args.framesize_link then
+		self.framesize = args.framesize_link
+	elseif args.framesize then
 		self.framesize = args.framesize:copy()
 	elseif args.layout then
 		self.framesize = vec2(1, 1):vector_div_inplace(args.layout)
 	else
 		self.framesize = vec2(1, 1)
 	end
-	self.frame = args.frame and args.frame:copy() or vec2(0, 0)
+	if args.frame_link then
+		self.frame = args.frame_link
+	elseif args.frame then
+		self.frame = args.frame:copy()
+	else
+		self.frame = vec2(0, 0)
+	end
 	--z ordering
 	self.z = args.z or 0
 	--rotation
@@ -47,7 +76,15 @@ function sprite:new(args)
 	self.visible = true
 	--track if we were on screen last frame
 	self.on_screen = true
-	--mirror orientation (should just be scale...)
+	--scale
+	if args.scale_link then
+		self.scale = args.scale_link
+	elseif args.scale then
+		self.scale = args.scale:copy()
+	else
+		self.scale = vec2(1, 1)
+	end
+	--mirror orientation (can just use scale, but sometimes this is convenient)
 	self.x_flipped = false
 	if args.x_flipped then
 		self.x_flipped = args.x_flipped
@@ -64,7 +101,8 @@ function sprite:new(args)
 	self.shader = args.shader or nil
 	--tex
 	self.texture = texture
-	if self.texture then
+	--default size is based on native size
+	if self.texture and not args.size and not args.size_link then
 		self.size
 			:scalar_set(self.texture:getDimensions())
 			:vector_mul_inplace(self.framesize)
@@ -97,14 +135,20 @@ function sprite:draw(quad, use_screenpos)
 		framesize.x, framesize.y
 	)
 	local scale_x = (size.x / framesize.x)
+		--account for scale
+		* self.scale.x
+		--account for flip
+		* (self.x_flipped and -1 or 1)
 	local scale_y = (size.y / framesize.y)
+		--account for scale
+		* self.scale.y
+		--account for flip
+		* (self.y_flipped and -1 or 1)
 	love.graphics.draw(
 		self.texture, quad,
 		pos.x, pos.y,
 		rot,
-		--TODO: just have scale here rather than flipped bools
-		(self.x_flipped and -1 or 1) * scale_x,
-		(self.y_flipped and -1 or 1) * scale_y,
+		scale_x, scale_y,
 		--centred
 		0.5 * framesize.x - (offset.x / scale_x),
 		0.5 * framesize.y - (offset.y / scale_y),
