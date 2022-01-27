@@ -1,5 +1,8 @@
 --[[
 	sprite ecs
+
+	todo: migrate to pixel frame sizes as it's less confusing for most people,
+		support "uv" naming for fractional sizes
 ]]
 
 local path = (...)
