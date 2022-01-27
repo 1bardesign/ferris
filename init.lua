@@ -29,6 +29,8 @@ return {
 
 	--input
 	keyboard = relative_require("input.keyboard"),
+	mouse = relative_require("input.mouse"),
+	gamepad = relative_require("input.gamepad"),
 
 	--important bits
 	main_loop = relative_require("main_loop"),
