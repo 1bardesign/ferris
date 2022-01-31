@@ -26,6 +26,8 @@ return {
 	frequency_counter = relative_require("util.frequency_counter"),
 	screenshake = relative_require("util.screenshake"),
 	screen_overlay = relative_require("util.screen_overlay"),
+	random_pool = relative_require("util.random_pool"),
+	crossfade = relative_require("util.crossfade"),
 
 	--input
 	keyboard = relative_require("input.keyboard"),
