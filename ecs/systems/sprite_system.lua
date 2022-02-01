@@ -1,8 +1,5 @@
 --[[
 	sprite ecs
-
-	todo: migrate to pixel frame sizes as it's less confusing for most people,
-		support "uv" naming for fractional sizes
 ]]
 
 local path = (...)
@@ -26,6 +23,10 @@ function sprite:new(args)
 		texture = args
 		args = sprite_default_args
 	end
+
+	--
+	assert:some(texture, "missing texture for sprite")
+
 	--xy
 	if args.pos_link then
 		self.pos = args.pos_link
@@ -40,26 +41,19 @@ function sprite:new(args)
 	elseif args.offset then
 		self.offset = args.offset:copy()
 	else
-		self.offset = vec2(1, 1)
+		self.offset = vec2(0, 0)
 	end
 
-	if args.size_link then
-		self.size = args.size_link
-	elseif args.size then
-		self.size = args.size:copy()
-	else
-		self.size = vec2(1, 1)
-	end
-
-	--uv
+	--layout
 	if args.framesize_link then
 		self.framesize = args.framesize_link
 	elseif args.framesize then
 		self.framesize = args.framesize:copy()
-	elseif args.layout then
-		self.framesize = vec2(1, 1):vector_div_inplace(args.layout)
 	else
-		self.framesize = vec2(1, 1)
+		self.framesize = vec2(texture:getDimensions())
+		if args.layout then
+			self.framesize:vector_div_inplace(args.layout)
+		end
 	end
 	if args.frame_link then
 		self.frame = args.frame_link
@@ -68,6 +62,16 @@ function sprite:new(args)
 	else
 		self.frame = vec2(0, 0)
 	end
+
+	--sprite size
+	if args.size_link then
+		self.size = args.size_link
+	elseif args.size then
+		self.size = args.size:copy()
+	else
+		self.size = self.framesize:copy()
+	end
+
 	--z ordering
 	self.z = args.z or 0
 	--rotation
@@ -101,28 +105,23 @@ function sprite:new(args)
 	self.shader = args.shader or nil
 	--tex
 	self.texture = texture
-	--default size is based on native size
-	if self.texture and not args.size and not args.size_link then
-		self.size
-			:scalar_set(self.texture:getDimensions())
-			:vector_mul_inplace(self.framesize)
-	end
-	--worldspace cache
-	self._screenpos = vec2:zero()
+	--screenspace cache
+	self._screenpos = vec2()
 	self._screen_rotation = 0
 end
 
-local _sprite_draw_temp_pos = vec2:zero()
-function sprite:draw(quad, use_screenpos)
+local _sprite_draw_temp_pos = vec2()
+local _sprite_draw_quad = love.graphics.newQuad(0,0,0,0,1,1)
+function sprite:draw(use_screenpos)
 	local pos
 	local rot
 
 	if use_screenpos then
 		--position in screenspace
-		pos = self._screenpos
+		pos = self._screenpos:pooled_copy()
 		rot = self._screen_rotation
 	else
-		pos = _sprite_draw_temp_pos:vset(self.pos)
+		pos = self.pos:pooled_copy()
 		rot = self.rot
 	end
 
@@ -130,10 +129,13 @@ function sprite:draw(quad, use_screenpos)
 	local frame = self.frame
 	local framesize = self.framesize
 	local offset = self.offset
-	quad:setViewport(
+
+	_sprite_draw_quad:setViewport(
 		frame.x * framesize.x, frame.y * framesize.y,
-		framesize.x, framesize.y
+		framesize.x, framesize.y,
+		self.texture:getDimensions()
 	)
+
 	local scale_x = (size.x / framesize.x)
 		--account for scale
 		* self.scale.x
@@ -144,17 +146,31 @@ function sprite:draw(quad, use_screenpos)
 		* self.scale.y
 		--account for flip
 		* (self.y_flipped and -1 or 1)
+
+	--add transformed offset into position
+	local transformed_offset = self.offset
+		:pooled_copy()
+		:vector_mul_inplace(self.scale)
+		:rotate_inplace(rot)
+	pos:vector_add_inplace(transformed_offset)
+	transformed_offset:release()
+
+	--set colour and blend (shader set externally)
+	love.graphics.setColor(1, 1, 1, self.alpha)
+	love.graphics.setBlendMode(self.blend, self.alpha_blend)
+
 	love.graphics.draw(
-		self.texture, quad,
+		self.texture, _sprite_draw_quad,
 		pos.x, pos.y,
 		rot,
 		scale_x, scale_y,
 		--centred
-		0.5 * framesize.x - (offset.x / scale_x),
-		0.5 * framesize.y - (offset.y / scale_y),
+		0.5 * framesize.x,
+		0.5 * framesize.y,
 		--no shear
 		0, 0
 	)
+	pos:release()
 end
 
 local sprite_system = class({
@@ -169,12 +185,8 @@ function sprite_system:new(args)
 	--or false/nil to use nothing
 	self.camera = args.camera
 	--whether to cull or draw on screen or untransformed
-	self.cull_screen = type(args.cull_screen) == "boolean"
-		and args.cull_screen
-		or true
-	self.draw_screen = type(args.draw_screen) == "boolean"
-		and args.draw_screen
-		or true
+	self.cull_screen = args.cull_screen == true
+	self.draw_screen = args.draw_screen == true
 	self.shader = args.shader
 	--texture ordering
 	self.texture_order_mapping = unique_mapping:new()
@@ -199,7 +211,7 @@ function sprite_system:remove(s)
 	table.remove_value(self.sprites, s)
 end
 
-function sprite_system:flush(camera)
+function sprite_system:draw(camera)
 	if type(self.transform_fn) == "function" then
 		--apply transformation function
 		for _, s in ipairs(self.sprites) do
@@ -219,24 +231,46 @@ function sprite_system:flush(camera)
 	--collect on screen to render
 	--todo: cache this first draw run, have a flush() call for settings changes
 
-	local filter_function = nil
-	if camera == nil then
-		filter_function = function(s)
-			return s.visible
+	local function filter_sprite(s)
+		if s.visible == false then
+			return false
 		end
-	else
-		if self.cull_screen then
-			filter_function = function(s)
-				return s.visible and camera:aabb_on_screen(s._screenpos, s.size)
+		if camera then
+			local pos = s.pos
+			if self.cull_screen then
+				pos = s._screenpos
 			end
-		else
-			filter_function = function(s)
-				return s.visible and camera:aabb_on_screen(s.pos, s.size)
+
+			--add in the offset
+			--todo: refactor with the same thing above
+			local transformed_offset = s.offset
+				:pooled_copy()
+				:vector_mul_inplace(s.scale)
+				:rotate_inplace(s.rot)
+			pos = pos:pooled_copy()
+			pos:vector_add_inplace(transformed_offset)
+			transformed_offset:release()
+
+			local hit = true --if the others fail, draw the sprite
+			local hs = s.size
+				:pooled_copy()
+				:scalar_mul_inplace(0.5 + math.abs(math.sin(s.rot * 2)) * 0.25)
+			if camera.aabb_onscreen then
+				hit = camera:aabb_onscreen(pos, hs)
+			elseif camera.pos and camera.halfsize then
+				hit = intersect.aabb_aabb_overlap(
+					camera.pos, camera.halfsize,
+					pos, hs
+				)
 			end
+			hs:release()
+			return hit
 		end
+
+		return true
 	end
 	local function write_filter_result(s)
-		local result = filter_function(s)
+		local result = filter_sprite(s)
 		s.on_screen = result
 		return result
 	end
@@ -255,31 +289,24 @@ function sprite_system:flush(camera)
 		return a.z < b.z
 	end)
 
+	--actually draw
+	love.graphics.push("all")
+	for _, s in ipairs(self.sprites_to_render) do
+		love.graphics.setShader(s.shader or self.shader)
+		s:draw(self.draw_screen)
+	end
+	love.graphics.pop()
+
 	--update debug info
 	self.debug.sprites = #self.sprites
 	self.debug.rendered = #self.sprites_to_render
-
-end
-
---draw all the sprites
-function sprite_system:draw()
-	local q = love.graphics.newQuad(0, 0, 1, 1, 1, 1)
-
-	love.graphics.push("all")
-	for _, s in ipairs(self.sprites_to_render) do
-		love.graphics.setColor(1, 1, 1, s.alpha)
-		love.graphics.setBlendMode(s.blend, s.alpha_blend)
-		love.graphics.setShader(s.shader or self.shader)
-		s:draw(q, self.draw_screen)
-	end
-	love.graphics.pop()
 end
 
 --register tasks for kernel
 function sprite_system:register(kernel, order)
-	kernel:add_task("update", function(k, dt)
+	kernel:add_task("draw", function(k)
 		local use_cam
-		if type(self.camera) == "boolean" and self.camera then
+		if self.camera == true then
 			--grab the kernel cam
 			use_cam = kernel.camera
 		else
@@ -289,14 +316,11 @@ function sprite_system:register(kernel, order)
 
 		if use_cam then
 			--cull to kernel cam
-			self:flush(use_cam)
+			self:draw(use_cam)
 		else
 			--no visibility culling
-			self:flush()
+			self:draw()
 		end
-	end, order + 1000)
-	kernel:add_task("draw", function(k)
-		self:draw()
 	end, order)
 end
 

@@ -61,7 +61,7 @@ end
 function animation:add_anim_multitexture(name, asset, frames_x, frames_y, frames, fps, loops)
 	self.animations[name] = {
 		asset = asset,
-		framesize = vec2:xy(1/frames_x, 1/frames_y),
+		framesize = vec2(frames_x, frames_y),
 		frames = frames,
 		time = (fps <= 0 and 0 or 1 / fps),
 		loops = loops,
@@ -139,14 +139,14 @@ end
 function animation:generate_frames_ordered_1d(sx, sy, count, frames_x, frames_y)
 	--missing frames? automatic from sprite frames
 	if frames_x == nil then
-		frames_x = math.floor(1 / self.sprite.framesize.x)
+		frames_x = math.floor(self.sprite.texture:getWidth() / self.sprite.framesize.x)
 	end
 	if frames_y == nil then
-		frames_y = math.floor(1 / self.sprite.framesize.y)
+		frames_y = math.floor(self.sprite.texture:getHeight() / self.sprite.framesize.y)
 	end
 	--build up the frames array
 	local frames = {}
-	for i=1,count do
+	for i = 1, count do
 		table.insert(frames, {sx, sy})
 		sx = sx + 1
 		if sx >= frames_x then
