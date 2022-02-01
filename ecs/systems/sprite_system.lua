@@ -112,18 +112,10 @@ end
 
 local _sprite_draw_temp_pos = vec2()
 local _sprite_draw_quad = love.graphics.newQuad(0,0,0,0,1,1)
-function sprite:draw(use_screenpos)
-	local pos
-	local rot
-
-	if use_screenpos then
-		--position in screenspace
-		pos = self._screenpos:pooled_copy()
-		rot = self._screen_rotation
-	else
-		pos = self.pos:pooled_copy()
-		rot = self.rot
-	end
+function sprite:draw()
+	--positioned beforehand
+	local pos = self._screenpos:pooled_copy()
+	local rot = self._screen_rotation
 
 	local size = self.size
 	local frame = self.frame
@@ -184,9 +176,9 @@ function sprite_system:new(args)
 	--the camera to use for culling, or true to use kernel cam,
 	--or false/nil to use nothing
 	self.camera = args.camera
-	--whether to cull or draw on screen or untransformed
-	self.cull_screen = args.cull_screen == true
-	self.draw_screen = args.draw_screen == true
+	--whether to cull sprites based on the camera
+	self.cull = args.cull == true
+	--the shader to use
 	self.shader = args.shader
 	--texture ordering
 	self.texture_order_mapping = unique_mapping:new()
@@ -212,13 +204,16 @@ function sprite_system:remove(s)
 end
 
 function sprite_system:draw(camera)
+	--cache the screen position
 	if type(self.transform_fn) == "function" then
+		--draw in screenspace
+		self.draw_screen = true
 		--apply transformation function
 		for _, s in ipairs(self.sprites) do
 			local tx, ty, rot = self.transform_fn(s)
 			if tx then s._screenpos.x = tx end
 			if ty then s._screenpos.y = ty end
-			if rot then s._screen_rotation = rot + s.rot end
+			if rot then s._screen_rotation = rot end
 		end
 	else
 		--copy
@@ -229,17 +224,14 @@ function sprite_system:draw(camera)
 	end
 
 	--collect on screen to render
-	--todo: cache this first draw run, have a flush() call for settings changes
+	--todo: cache these functions first draw run, have a flush() call for settings changes
 
 	local function filter_sprite(s)
 		if s.visible == false then
 			return false
 		end
 		if camera then
-			local pos = s.pos
-			if self.cull_screen then
-				pos = s._screenpos
-			end
+			local pos = s._screenpos
 
 			--add in the offset
 			--todo: refactor with the same thing above
@@ -293,7 +285,7 @@ function sprite_system:draw(camera)
 	love.graphics.push("all")
 	for _, s in ipairs(self.sprites_to_render) do
 		love.graphics.setShader(s.shader or self.shader)
-		s:draw(self.draw_screen)
+		s:draw()
 	end
 	love.graphics.pop()
 
