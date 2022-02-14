@@ -180,8 +180,6 @@ function sprite_system:new(args)
 	self.cull = args.cull == true
 	--the shader to use
 	self.shader = args.shader
-	--texture ordering
-	self.texture_order_mapping = unique_mapping:new()
 	--list of sprites
 	self.sprites = {}
 	--filtered list
@@ -191,45 +189,32 @@ function sprite_system:new(args)
 		sprites = 0,
 		rendered = 0,
 	}
-end
+	--texture ordering
 
-function sprite_system:add(texture)
-	local s = sprite(texture)
-	table.insert(self.sprites, s)
-	return s
-end
-
-function sprite_system:remove(s)
-	table.remove_value(self.sprites, s)
-end
-
-function sprite_system:draw(camera)
-	--cache the screen position
-	if type(self.transform_fn) == "function" then
-		--draw in screenspace
-		self.draw_screen = true
-		--apply transformation function
-		for _, s in ipairs(self.sprites) do
-			local tx, ty, rot = self.transform_fn(s)
-			if tx then s._screenpos.x = tx end
-			if ty then s._screenpos.y = ty end
-			if rot then s._screen_rotation = rot end
+	--todo: unique_mapping needs to be refactored to use a proper class
+	--		and could maybe be moved out of batteries and into ferris
+	local _order = unique_mapping:new()
+	self.sprite_order = function(a, b)
+		local a_order = a.z
+		local b_order = b.z
+		if a_order == b_order then
+			--secondary sort on texture within z level for batching
+			a_order = _order:map(a.texture)
+			b_order = _order:map(b.texture)
+			if a_order == b_order then
+				--final sort on shader
+				a_order = _order:map(a.shader or 0)
+				b_order = _order:map(b.shader or 0)
+			end
 		end
-	else
-		--copy
-		for _, s in ipairs(self.sprites) do
-			s._screenpos:vset(s.pos)
-			s._screen_rotation = s.rot
-		end
+		return a_order < b_order
 	end
-
-	--collect on screen to render
-	--todo: cache these functions first draw run, have a flush() call for settings changes
 
 	local function filter_sprite(s)
 		if s.visible == false then
 			return false
 		end
+		local camera = self.camera
 		if camera then
 			local pos = s._screenpos
 
@@ -261,25 +246,51 @@ function sprite_system:draw(camera)
 
 		return true
 	end
-	local function write_filter_result(s)
+	self.filter_and_store = function(s)
 		local result = filter_sprite(s)
 		s.on_screen = result
 		return result
 	end
-	self.sprites_to_render = functional.filter(self.sprites, write_filter_result)
+end
 
-	--sort to render
-	local _torder = self.texture_order_mapping
-	local function _texture_order(tex)
-		return _torder:map(tex)
-	end
-	table.stable_sort(self.sprites_to_render, function(a, b)
-		if a.z == b.z then
-			--secondary sort on texture within z level for batching
-			return _texture_order(a.texture) < _texture_order(b.texture)
+function sprite_system:add(texture)
+	local s = sprite(texture)
+	table.insert(self.sprites, s)
+	return s
+end
+
+function sprite_system:remove(s)
+	table.remove_value(self.sprites, s)
+end
+
+function sprite_system:draw(camera)
+	--
+	self.camera = camera
+
+	--cache the screen position
+	if type(self.transform_fn) == "function" then
+		--draw in screenspace
+		self.draw_screen = true
+		--apply transformation function
+		for _, s in ipairs(self.sprites) do
+			local tx, ty, rot = self.transform_fn(s)
+			if tx then s._screenpos.x = tx end
+			if ty then s._screenpos.y = ty end
+			if rot then s._screen_rotation = rot end
 		end
-		return a.z < b.z
-	end)
+	else
+		--copy
+		for _, s in ipairs(self.sprites) do
+			s._screenpos:vset(s.pos)
+			s._screen_rotation = s.rot
+		end
+	end
+
+	--sort whole list (insertion is adaptive so as long as the z orders are fairly consistent, it'll be faster than anything else)
+	table.insertion_sort(self.sprites, self.sprite_order)
+
+	--collect on screen to render
+	self.sprites_to_render = functional.filter(self.sprites, self.filter_and_store)
 
 	--actually draw
 	love.graphics.push("all")
