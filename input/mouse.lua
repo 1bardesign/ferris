@@ -11,6 +11,8 @@ local _mouse_buttons = {
 function mouse:new()
 	self.button_data = {}
 	self.pos = vec2()
+	self.scroll = vec2()
+	self.next_scroll = vec2()
 	self:clear()
 end
 
@@ -29,6 +31,9 @@ function mouse:update(dt)
 		end
 	end
 	self.pos:sset(love.mouse.getPosition())
+	--read buffer
+	self.scroll:vector_set(self.next_scroll)
+	self.next_scroll:scalar_set(0)
 end
 
 --callbacks
@@ -50,6 +55,10 @@ function mouse:mousereleased(x, y, button)
 	table.insert(d.events, "released")
 end
 
+function mouse:wheelmoved(x, y)
+	self.next_scroll:scalar_add_inplace(x, y)
+end
+
 --clear the button states to all-released (handy on state transition)
 function mouse:clear()
 	for _, v in ipairs(_mouse_buttons) do
@@ -58,6 +67,8 @@ function mouse:clear()
 			events = {},
 		}
 	end
+	self.scroll:scalar_set(0)
+	self.next_scroll:scalar_set(0)
 end
 
 function mouse:_raw_time(button)
