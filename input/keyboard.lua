@@ -179,12 +179,16 @@ function keyboard:keyreleased(key)
 end
 
 --clear the key states to all-released (handy on state transition)
-function keyboard:clear()
-	for _, v in ipairs(_all_keys) do
+function keyboard:clear(v)
+	if v then
 		self.key_data[v] = {
 			time = -1,
 			events = {},
 		}
+	else
+		for _, v in ipairs(_all_keys) do
+			self:clear(v)
+		end
 	end
 end
 
