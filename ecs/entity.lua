@@ -106,7 +106,8 @@ function entity:remove_all_components()
 end
 
 --entity destruction
---(helper)
+
+--(helper to check if something was already destroyed, but we're destroying it again)
 function entity:_check_double_destroyed()
 	if self._destroyed then
 		error("entity double-destroyed")
