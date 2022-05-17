@@ -199,14 +199,16 @@ function sprite_system:new(args)
 	self.sprite_order = function(a, b)
 		local a_order = a.z
 		local b_order = b.z
-		if a_order == b_order then
-			--secondary sort on texture within z level for batching
-			a_order = _order:map(a.texture)
-			b_order = _order:map(b.texture)
+		if not args.preserve_order then
 			if a_order == b_order then
-				--final sort on shader
-				a_order = _order:map(a.shader or 0)
-				b_order = _order:map(b.shader or 0)
+				--secondary sort on texture within z level for batching
+				a_order = _order:map(a.texture)
+				b_order = _order:map(b.texture)
+				if a_order == b_order then
+					--final sort on shader
+					a_order = _order:map(a.shader or 0)
+					b_order = _order:map(b.shader or 0)
+				end
 			end
 		end
 		return a_order < b_order
