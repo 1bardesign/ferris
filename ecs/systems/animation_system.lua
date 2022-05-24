@@ -118,8 +118,8 @@ function animation:progress()
 	return math.clamp01((self.frame - 1 + self.time / anim.time) / #anim.frames)
 end
 
---helper: get the current frame
-function animation:_get_frame()
+--get the current frame
+function animation:get_frame()
 	local anim = self.anim
 	if not anim then
 		return nil
@@ -130,7 +130,7 @@ end
 
 --helper: set the correct frame (or a previously extracted frame)
 function animation:_set_frame(frames)
-	frames = frames or self:_get_frame()
+	frames = frames or self:get_frame()
 	if not frames then return end
 	self.sprite.frame:sset(frames[1], frames[2])
 end
