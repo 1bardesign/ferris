@@ -13,6 +13,8 @@ function crossfade_lerp:new(source, volume, time)
 	self.timer = timer(time, function(f)
 		self.source:setVolume(math.lerp(self.start_volume, self.end_volume, f))
 	end, function()
+		--make sure the volume is set to the right level
+		self.source:setVolume(self.end_volume)
 		--todo: configurable
 		if self.end_volume == 0 then
 			self.source:stop()
