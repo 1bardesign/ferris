@@ -6,7 +6,7 @@ local crossfade_lerp = class({
 	name = "crossfade_lerp",
 })
 
-function crossfade_lerp:new(source, volume, time)
+function crossfade_lerp:new(source, volume, time, stop_source)
 	self.source = source
 	self.start_volume = source:getVolume()
 	self.end_volume = volume
@@ -17,7 +17,11 @@ function crossfade_lerp:new(source, volume, time)
 		self.source:setVolume(self.end_volume)
 		--todo: configurable
 		if self.end_volume == 0 then
-			self.source:stop()
+			if stop_source then
+				self.source:stop()
+			else
+				self.source:pause()
+			end
 		end
 	end)
 end
@@ -45,12 +49,15 @@ local crossfade = class({
 --		the (maximum) volume to set each source to (while still respecting the source's volume limits)
 --	transition_time - optional, default 1.0
 --		how long to fade for (can be overriden per-transition)
+--	keep_playing - optional, default false
+--		whether to actually stop the sources at the end, or just pause them
 function crossfade:new(args)
 	args = args or {}
 	self._source = false
 	self._lerps = {}
 	self._volume = args.volume or 1.0
 	self._transition_time = args.transition_time or 1.0
+	self._stop_sources = not args.keep_playing
 end
 
 --keep everything up to date
@@ -81,7 +88,7 @@ function crossfade:transition(source, time)
 			return not v:match(self._source)
 		end)
 		--add new fade out
-		table.insert(self._lerps, crossfade_lerp(self._source, 0, time))
+		table.insert(self._lerps, crossfade_lerp(self._source, 0, time, self._stop_sources))
 	end
 
 	self._source = source
