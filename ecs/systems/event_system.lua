@@ -33,6 +33,10 @@ function event_system:subscribe(...)
 	return self.hub:subscribe(...)
 end
 
+function event_system:subscribe_once(...)
+	return self.hub:subscribe_once(...)
+end
+
 function event_system:unsubscribe(...)
 	return self.hub:unsubscribe(...)
 end
