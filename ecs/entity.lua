@@ -55,7 +55,7 @@ end
 function entity:add_component(system, name, ...)
 	local sys = self.systems[system]
 	if sys == nil then
-		error("system "..system.." not registered for this entity")
+		error("system '"..system.."' not registered for this entity - either a name typo or unexpected set of systems")
 	end
 
 	if name == nil then
