@@ -4,6 +4,7 @@
 
 local path = (...)
 local base = require(path:gsub("sprite_system", "base"))
+local unique_mapping = require(path:gsub("ecs.systems.sprite_system", "util.unique_mapping"))
 
 --sprite type
 local sprite = class({
@@ -192,10 +193,7 @@ function sprite_system:new(args)
 		rendered = 0,
 	}
 	--texture ordering
-
-	--todo: unique_mapping needs to be refactored to use a proper class
-	--		and could maybe be moved out of batteries and into ferris
-	local _order = unique_mapping:new()
+	local _order = unique_mapping()
 	self.sprite_order = function(a, b)
 		local a_order = a.z
 		local b_order = b.z
@@ -292,7 +290,7 @@ function sprite_system:draw(camera)
 
 	--sort whole list (insertion is adaptive so as long as the z orders are fairly consistent, it'll be faster than anything else)
 	if self.z_order then
-		table.insertion_sort(self.sprites, self.sprite_order)
+		table.sort(self.sprites, self.sprite_order)
 	end
 
 	--collect on screen to render

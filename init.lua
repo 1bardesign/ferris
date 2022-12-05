@@ -28,6 +28,7 @@ return {
 	screen_overlay = relative_require("util.screen_overlay"),
 	random_pool = relative_require("util.random_pool"),
 	crossfade = relative_require("util.crossfade"),
+	unique_mapping = relative_require("util.unique_mapping"),
 
 	--input
 	keyboard = relative_require("input.keyboard"),

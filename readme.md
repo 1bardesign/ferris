@@ -37,6 +37,7 @@ An example project can be found [here](https://github.com/1bardesign/ferris-exam
 	- `frequency_counter` - count a number of events over some period of time (eg. frames per second)
 	- `screen_overlay` - a single colour overlay for the whole screen; useful for fades and flashes
 	- `screenshake` - a simple screenshake implementation
+	- [`unique_mapping`](./unique_mapping.lua) - Generate a unique mapping from arbitrary lua values to numeric keys - essentially making up a consistent ordering for unordered data. Niche, but can be used to optimise draw batches for example, as you can't sort on textures without it.
 
 # ECS(K) design
 
