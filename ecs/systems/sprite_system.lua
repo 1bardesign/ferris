@@ -290,7 +290,7 @@ function sprite_system:draw(camera)
 
 	--sort whole list (insertion is adaptive so as long as the z orders are fairly consistent, it'll be faster than anything else)
 	if self.z_order then
-		table.sort(self.sprites, self.sprite_order)
+		table.insertion_sort(self.sprites, self.sprite_order)
 	end
 
 	--collect on screen to render
