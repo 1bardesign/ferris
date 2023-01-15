@@ -242,6 +242,7 @@ function sprite_system:new(args)
 					pos, hs
 				)
 			end
+			pos:release()
 			hs:release()
 			return hit
 		end
@@ -265,16 +266,13 @@ function sprite_system:remove(s)
 	table.remove_value(self.sprites, s)
 end
 
-function sprite_system:draw(camera)
-	--
-	self.camera = camera
-
+function sprite_system:_cache_pos(sprites)
 	--cache the screen position
 	if type(self.transform_fn) == "function" then
 		--draw in screenspace
 		self.draw_screen = true
 		--apply transformation function
-		for _, s in ipairs(self.sprites) do
+		for _, s in ipairs(sprites) do
 			local tx, ty, rot = self.transform_fn(s)
 			if tx then s._screenpos.x = tx end
 			if ty then s._screenpos.y = ty end
@@ -282,19 +280,38 @@ function sprite_system:draw(camera)
 		end
 	else
 		--copy
-		for _, s in ipairs(self.sprites) do
+		for _, s in ipairs(sprites) do
 			s._screenpos:vset(s.pos)
 			s._screen_rotation = s.rot
 		end
 	end
+end
 
-	--sort whole list (insertion is adaptive so as long as the z orders are fairly consistent, it'll be faster than anything else)
+function sprite_system:draw(camera)
+	--
+	self.camera = camera
+
+	--
+	self:_cache_pos(self.sprites)
+
+	--sort whole list (insertion is adaptive so as long as the z orders are fairly consistent, it'll be faster over time than anything else)
 	if self.z_order then
 		table.insertion_sort(self.sprites, self.sprite_order)
 	end
 
 	--collect on screen to render
 	self.sprites_to_render = functional.filter(self.sprites, self.filter_and_store)
+
+	--temporary (immediate mode) sprites
+	if self.immediate_sprites then
+		--dump them in (no culling)
+		self:_cache_pos(self.immediate_sprites)
+		table.append_inplace(self.sprites_to_render, self.immediate_sprites)
+		--sort again
+		table.insertion_sort(self.sprites_to_render, self.sprite_order)
+		--clear for next frame
+		table.clear(self.immediate_sprites)
+	end
 
 	--actually draw
 	love.graphics.push("all")
@@ -307,6 +324,19 @@ function sprite_system:draw(camera)
 	--update debug info
 	self.debug.sprites = #self.sprites
 	self.debug.rendered = #self.sprites_to_render
+end
+
+--draw a sprite in immediate mode
+--	it'll be dropped after being drawn
+--	wasteful but helpful to be able to eg inject ui elements into the sprite list without managing long-lived components
+function sprite_system:immediate_mode(args)
+	--init
+	if not self.immediate_sprites then self.immediate_sprites = {} end
+	--construct
+	local s = sprite(args)
+	table.insert(self.immediate_sprites, s)
+	--return in case we want to tweak it
+	return s
 end
 
 --register tasks for kernel
