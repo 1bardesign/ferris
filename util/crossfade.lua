@@ -64,8 +64,7 @@ end
 
 --keep everything up to date
 function crossfade:update(dt)
-	for i = #self._lerps, 1, -1 do
-		local v = self._lerps[i]
+	for i, v in ripairs(self._lerps) do
 		v:update(dt)
 		if v:done() then
 			table.remove(self._lerps, i)
