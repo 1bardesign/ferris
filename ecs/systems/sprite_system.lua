@@ -99,6 +99,7 @@ function sprite:new(args)
 		self.y_flipped = args.y_flipped
 	end
 	--blend config
+	self.colour = {1, 1, 1}
 	self.alpha = args.alpha or 1
 	self.blend = args.blend or "alpha"
 	self.alpha_blend = args.alpha_blend or "alphamultiply"
@@ -149,7 +150,7 @@ function sprite:draw()
 	transformed_offset:release()
 
 	--set colour and blend (shader set externally)
-	love.graphics.setColor(1, 1, 1, self.alpha)
+	love.graphics.setColor(self.colour[1], self.colour[2], self.colour[3], self.colour[4] or self.alpha)
 	love.graphics.setBlendMode(self.blend, self.alpha_blend)
 
 	love.graphics.draw(
