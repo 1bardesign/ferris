@@ -10,7 +10,9 @@ local _mouse_buttons = {
 
 function mouse:new()
 	self.button_data = {}
+	self.oldpos = vec2()
 	self.pos = vec2()
+	self.moved = false
 	self.scroll = vec2()
 	self.next_scroll = vec2()
 	self:clear()
@@ -31,6 +33,9 @@ function mouse:update(dt)
 		end
 	end
 	self.pos:sset(love.mouse.getPosition())
+	--check moved
+	self.moved = not self.pos:equals(self.oldpos)
+	self.oldpos:vset(self.pos)
 	--read buffer
 	self.scroll:vector_set(self.next_scroll)
 	self.next_scroll:scalar_set(0)
@@ -69,6 +74,9 @@ function mouse:clear()
 	end
 	self.scroll:scalar_set(0)
 	self.next_scroll:scalar_set(0)
+	self.pos:sset(love.mouse.getPosition())
+	self.oldpos:vset(self.pos)
+	self.moved = false
 end
 
 function mouse:_raw_time(button)
