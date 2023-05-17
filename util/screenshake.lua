@@ -10,10 +10,12 @@ function screenshake:new()
 	self.amplitude = 0
 	self.time = 1
 	self.timer = 0
+	self.decay_rate = 2  -- Rate at which shake amplitude reduces over time
 end
 
 function screenshake:update(dt)
 	self.timer = self.timer + dt
+	self.amplitude = self.amplitude * math.exp(-self.decay_rate * dt)  -- Exponential decay
 end
 
 function screenshake:amount()
@@ -36,7 +38,7 @@ end
 function screenshake:trigger(amplitude, time)
 	self.timer = 0
 	self.time = time
-	self.amplitude = amplitude
+	self.amplitude = amplitude + love.math.random() * 0.1 * amplitude -- Adding randomness to amplitude
 end
 
 return screenshake
