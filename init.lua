@@ -26,6 +26,7 @@ return {
 	frequency_counter = relative_require("util.frequency_counter"),
 	screenshake = relative_require("util.screenshake"),
 	screen_overlay = relative_require("util.screen_overlay"),
+	gamepause = relative_require("util.gamepause"),
 	random_pool = relative_require("util.random_pool"),
 	crossfade = relative_require("util.crossfade"),
 	unique_mapping = relative_require("util.unique_mapping"),
