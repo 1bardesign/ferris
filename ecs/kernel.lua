@@ -18,7 +18,7 @@
 
 	local systems = k.systems
 
-	k:call("task name", ...)
+	k:run_task("task name", ...)
 ]]
 
 local path = (...)
