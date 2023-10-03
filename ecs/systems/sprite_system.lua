@@ -104,7 +104,8 @@ function sprite:new(args)
 	self.blend = args.blend or "alpha"
 	self.alpha_blend = args.alpha_blend or "alphamultiply"
 	--shader config
-	self.shader = args.shader or nil
+	self.shader = args.shader or false
+	self.shader_uniforms = args.shader_uniforms or false
 	--tex
 	self.texture = texture
 	--screenspace cache
@@ -317,7 +318,17 @@ function sprite_system:draw(camera)
 	--actually draw
 	love.graphics.push("all")
 	for _, s in ipairs(self.sprites_to_render) do
-		love.graphics.setShader(s.shader or self.shader)
+		--figure out the shader we're talking about
+		local shader = nil
+		if self.shader then shader = self.shader end
+		if s.shader then shader = s.shader end
+		love.graphics.setShader(shader)
+		--if there's uniforms, send them (slow)
+		if s.shader_uniforms and shader then
+			for _, v in ipairs(s.shader_uniforms) do
+				shader:send(v[1], v[2])
+			end
+		end
 		s:draw()
 	end
 	love.graphics.pop()
