@@ -106,6 +106,12 @@ function sprite:new(args)
 	--shader config
 	self.shader = args.shader or false
 	self.shader_uniforms = args.shader_uniforms or false
+	--stencil config
+	self.stencil = args.stencil or false
+	self.stencil_action = args.stencil_action or "replace"
+	self.clear_stencil = args.clear_stencil or false
+	self.just_stencil = args.just_stencil or false
+	self.stencil_test = args.stencil_test or false
 	--tex
 	self.texture = texture
 	--screenspace cache
@@ -115,6 +121,25 @@ end
 
 local _sprite_draw_temp_pos = vec2()
 local _sprite_draw_quad = love.graphics.newQuad(0,0,0,0,1,1)
+--stencil stuff - todo make this much nicer :)
+local _draw_stencil_sprite_config = {}
+local function _draw_stencil_sprite()
+	local cfg = _draw_stencil_sprite_config
+	if not cfg.just_stencil then
+		love.graphics.setColorMask(true, true, true, true) --draw to screen too
+	end
+	love.graphics.draw(
+		cfg.texture, cfg.quad,
+		cfg.pos.x, cfg.pos.y,
+		cfg.rot,
+		cfg.scale_x, cfg.scale_y,
+		--centred
+		0.5 * cfg.framesize.x,
+		0.5 * cfg.framesize.y,
+		--no shear
+		0, 0
+	)
+end
 function sprite:draw()
 	--positioned beforehand
 	local pos = self._screenpos:pooled_copy()
@@ -154,17 +179,40 @@ function sprite:draw()
 	love.graphics.setColor(self.colour[1], self.colour[2], self.colour[3], self.colour[4] or self.alpha)
 	love.graphics.setBlendMode(self.blend, self.alpha_blend)
 
-	love.graphics.draw(
-		self.texture, _sprite_draw_quad,
-		pos.x, pos.y,
-		rot,
-		scale_x, scale_y,
-		--centred
-		0.5 * framesize.x,
-		0.5 * framesize.y,
-		--no shear
-		0, 0
-	)
+	if self.stencil then
+		local stencil_value = self.stencil
+		if type(stencil_value) == "boolean" then
+			stencil_value = 1
+		end
+		local cfg = _draw_stencil_sprite_config
+		cfg.texture = self.texture
+		cfg.quad = _sprite_draw_quad
+		cfg.pos = pos
+		cfg.rot = rot
+		cfg.framesize = framesize
+		cfg.scale_x = scale_x
+		cfg.scale_y = scale_y
+		cfg.just_stencil = self.just_stencil
+		lg.stencil(_draw_stencil_sprite, self.stencil_action, stencil_value, not self.clear_stencil)
+	else
+		if self.stencil_test then
+			assert:type(self.stencil_test, "table", "sprite stencil test")
+			love.graphics.setStencilTest(table.unpack2(self.stencil_test))
+		else
+			love.graphics.setStencilTest()
+		end
+		love.graphics.draw(
+			self.texture, _sprite_draw_quad,
+			pos.x, pos.y,
+			rot,
+			scale_x, scale_y,
+			--centred
+			0.5 * framesize.x,
+			0.5 * framesize.y,
+			--no shear
+			0, 0
+		)
+	end
 	pos:release()
 end
 
