@@ -78,7 +78,7 @@ function main_loop:new(interpolate_render)
 			end
 
 			--sweep garbage always
-			manual_gc(1e-3, 64, false)
+			manual_gc(1e-3)
 
 			--give the cpu a break
 			love.timer.sleep(0.001)
