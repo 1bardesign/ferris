@@ -5,7 +5,7 @@ local gamepad = class({
 	name = "gamepad",
 })
 
-local buttons = {
+gamepad.buttons = {
 	--axis remappings
 	"lsup",
 	"lsdown",
@@ -35,7 +35,7 @@ local buttons = {
 	"dpright"
 }
 
-local axes = {
+gamepad.axes = {
 	["lsup"] = {0, -1, "lefty"},
 	["lsdown"] = {0, 1, "lefty"},
 	["lsleft"] = {0, -1, "leftx"},
@@ -120,8 +120,8 @@ end
 function gamepad:clear()
 	for i, p in ipairs(
 		{
-			axes,
-			buttons
+			self.axes,
+			self.buttons
 		}
 	) do
 		for k, v in ipairs(p) do
@@ -140,11 +140,11 @@ function gamepad:update(dt)
 	end
 
 	--update each button
-	for i, v in ipairs(buttons) do
+	for i, v in ipairs(self.buttons) do
 		--check pressed (different for axis vs button)
 		local pressed = false
-		if axes[v] then
-			local axis_start, axis_end, axis_name = unpack(axes[v])
+		if self.axes[v] then
+			local axis_start, axis_end, axis_name = unpack(self.axes[v])
 			local direction = axis_end - axis_start
 			local axis_value = self.stick:getGamepadAxis(axis_name)
 			if axis_value * direction > 0.5 then
@@ -202,7 +202,7 @@ end
 --"any" key
 function gamepad:any_pressed()
 	if not self:active() then return false end
-	for _, k in ipairs(buttons) do
+	for _, k in ipairs(self.buttons) do
 		if self:pressed(k) then
 			return true
 		end
@@ -212,7 +212,7 @@ end
 
 function gamepad:any_just_pressed()
 	if not self:active() then return false end
-	for _, k in ipairs(buttons) do
+	for _, k in ipairs(self.buttons) do
 		if self:just_pressed(k) then
 			return true
 		end

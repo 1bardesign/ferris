@@ -11,7 +11,7 @@ local keyboard = class({
 })
 
 --the keys we care about
-local _all_keys = {
+keyboard.all_keys = {
 	--anum
 	"a",
 	"b",
@@ -146,7 +146,7 @@ function keyboard:new()
 end
 
 function keyboard:update(dt)
-	for _, v in ipairs(_all_keys) do
+	for _, v in ipairs(self.all_keys) do
 		local d = self.key_data[v]
 		if #d.events > 0 then
 			local e = table.remove(d.events, 1)
@@ -186,7 +186,7 @@ function keyboard:clear(v)
 			events = {},
 		}
 	else
-		for _, v in ipairs(_all_keys) do
+		for _, v in ipairs(self.all_keys) do
 			self:clear(v)
 		end
 	end
@@ -239,7 +239,7 @@ end
 
 --"any" key
 function keyboard:any_pressed()
-	for _, k in ipairs(_all_keys) do
+	for _, k in ipairs(self.all_keys) do
 		if self:pressed(k) then
 			return true
 		end
@@ -248,7 +248,7 @@ function keyboard:any_pressed()
 end
 
 function keyboard:any_just_pressed()
-	for _, k in ipairs(_all_keys) do
+	for _, k in ipairs(self.all_keys) do
 		if self:just_pressed(k) then
 			return true
 		end

@@ -4,7 +4,7 @@ local mouse = class({
 	name = "mouse",
 })
 
-local _mouse_buttons = {
+mouse.buttons = {
 	1, 2, 3
 }
 
@@ -19,7 +19,7 @@ function mouse:new()
 end
 
 function mouse:update(dt)
-	for _, v in ipairs(_mouse_buttons) do
+	for _, v in ipairs(mouse.buttons) do
 		local d = self.button_data[v]
 		if #d.events > 0 then
 			local e = table.remove(d.events, 1)
@@ -66,7 +66,7 @@ end
 
 --clear the button states to all-released (handy on state transition)
 function mouse:clear()
-	for _, v in ipairs(_mouse_buttons) do
+	for _, v in ipairs(mouse.buttons) do
 		self.button_data[v] = {
 			time = -1,
 			events = {},
@@ -126,7 +126,7 @@ end
 
 --"any" button
 function mouse:any_pressed()
-	for _, button in ipairs(_mouse_buttons) do
+	for _, button in ipairs(mouse.buttons) do
 		if self:pressed(button) then
 			return true
 		end
@@ -135,7 +135,7 @@ function mouse:any_pressed()
 end
 
 function mouse:any_just_pressed()
-	for _, button in ipairs(_mouse_buttons) do
+	for _, button in ipairs(mouse.buttons) do
 		if self:just_pressed(button) then
 			return true
 		end
