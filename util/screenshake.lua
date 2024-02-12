@@ -29,7 +29,7 @@ local _av = vec2() --cached to avoid gc
 function screenshake:apply(camera_position)
 	local am = self:amount()
 	if am > 0 then
-		_av:sset(love.math.random() * am)
+		_av:sset(love.math.random() * am, 0)
 			:rotatei(love.math.random() * math.tau)
 		camera_position:vaddi(_av)
 	end
