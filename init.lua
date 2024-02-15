@@ -29,6 +29,7 @@ return {
 	random_pool = relative_require("util.random_pool"),
 	crossfade = relative_require("util.crossfade"),
 	unique_mapping = relative_require("util.unique_mapping"),
+	profiler = relative_require("util.profiler"),
 
 	--input
 	keyboard = relative_require("input.keyboard"),
