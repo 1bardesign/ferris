@@ -16,7 +16,7 @@ end
 
 function screen_overlay:fade(colour, time)
 	colour = self:_decode_colour(colour)
-	self.old_colour = self.colour
+	self.old_colour = {self:current_colour()}
 	self.colour = table.values(colour) --take a copy
 	self.timer:reset(time)
 end
@@ -39,8 +39,8 @@ function screen_overlay:update(dt)
 	self.timer:update(dt)
 end
 
---draw the overlay
-function screen_overlay:draw()
+--get the current lerped colour
+function screen_overlay:current_colour()
 	--get components
 	local r1, g1, b1, a1 = table.unpack4(self.old_colour)
 	local r2, g2, b2, a2 = table.unpack4(self.colour)
@@ -50,6 +50,12 @@ function screen_overlay:draw()
 	local g = math.lerp(g1, g2, t)
 	local b = math.lerp(b1, b2, t)
 	local a = math.lerp(a1, a2, t)
+	return r, g, b, a
+end
+
+--draw the overlay
+function screen_overlay:draw()
+	local r, g, b, a = self:current_colour()
 	--render
 	love.graphics.push("all")
 	love.graphics.setColor(r, g, b, a)
