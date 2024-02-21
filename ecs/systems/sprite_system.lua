@@ -337,10 +337,8 @@ function sprite_system:_cache_pos(sprites)
 	end
 end
 
-function sprite_system:draw(camera)
-	--
-	self.camera = camera
-
+--get everything ready to draw
+function sprite_system:_draw_prepare()
 	--
 	self:_cache_pos(self.sprites)
 
@@ -362,8 +360,10 @@ function sprite_system:draw(camera)
 		--clear for next frame
 		table.clear(self.immediate_sprites)
 	end
+end
 
-	--actually draw
+--actually draw
+function sprite_system:_draw_execute()
 	love.graphics.push("all")
 	for _, s in ipairs(self.sprites_to_render) do
 		--figure out the shader we're talking about
@@ -384,6 +384,13 @@ function sprite_system:draw(camera)
 	--update debug info
 	self.debug.sprites = #self.sprites
 	self.debug.rendered = #self.sprites_to_render
+end
+
+function sprite_system:draw(camera)
+	self.camera = camera
+
+	self:_draw_prepare()
+	self:_draw_execute()
 end
 
 --draw a sprite in immediate mode
