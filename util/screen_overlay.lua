@@ -24,7 +24,8 @@ end
 --flash a colour on the screen, and fade it out to fully transparent
 function screen_overlay:flash(colour, time)
 	colour = self:_decode_colour(colour)
-	self:fade(colour, 0)
+	self.colour = table.copy(colour)
+	self.old_colour = table.copy(colour)
 	colour[4] = 0
 	self:fade(colour, time)
 end
