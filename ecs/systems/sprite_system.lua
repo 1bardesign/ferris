@@ -354,9 +354,14 @@ function sprite_system:_draw_prepare()
 	if self.immediate_sprites and #self.immediate_sprites > 0 then
 		--dump them in (no culling)
 		self:_cache_pos(self.immediate_sprites)
-		table.append_inplace(self.sprites_to_render, self.immediate_sprites)
-		--sort again
-		table.insertion_sort(self.sprites_to_render, self.sprite_order)
+		--insert in the right place
+		for _, v in ipairs(self.immediate_sprites) do
+			if self.z_order then
+				table.insert_sorted(self.sprites_to_render, v, self.sprite_order)
+			else
+				table.insert(self.sprites_to_render, v)
+			end
+		end
 		--clear for next frame
 		table.clear(self.immediate_sprites)
 	end
