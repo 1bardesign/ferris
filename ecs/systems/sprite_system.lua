@@ -351,7 +351,7 @@ function sprite_system:_draw_prepare()
 	self.sprites_to_render = functional.filter(self.sprites, self.filter_and_store)
 
 	--temporary (immediate mode) sprites
-	if self.immediate_sprites then
+	if self.immediate_sprites and #self.immediate_sprites > 0 then
 		--dump them in (no culling)
 		self:_cache_pos(self.immediate_sprites)
 		table.append_inplace(self.sprites_to_render, self.immediate_sprites)
