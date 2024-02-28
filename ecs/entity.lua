@@ -132,11 +132,12 @@ end
 
 --flush all deferred entities - should do this at least once per frame
 function entity.flush_entities()
-	if entities_to_destroy:size() > 0 then
-		for _, e in entities_to_destroy:ipairs() do
+	while entities_to_destroy:size() > 0 do
+		local old_entities_to_destroy = entities_to_destroy
+		entities_to_destroy = set()
+		for _, e in old_entities_to_destroy:ipairs() do
 			e:destroy_now()
 		end
-		entities_to_destroy:clear()
 	end
 end
 
