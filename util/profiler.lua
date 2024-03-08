@@ -7,6 +7,10 @@ local profiler = class({
 function profiler:new()
 	self._stack = {}
 	self._result = {}
+	self._worst = {}
+	--todo arguments?
+	self._worst_count = 3
+	self._worst_period = 10 --seconds
 	self._hold = false
 end
 
@@ -20,6 +24,7 @@ function profiler:push(name)
 		time = love.timer.getTime(),
 		memory = (collectgarbage("count") * 1024),
 		depth = #self._stack + 1,
+		duration = 0,
 	}
 	table.insert(self._result, block)
 	table.insert(self._stack, block)
@@ -27,9 +32,28 @@ end
 
 function profiler:pop(name)
 	local block = table.pop(self._stack)
+	local now = love.timer.getTime()
 	assert:equal(name, block.name, "profiler block names should match")
-	block.time = (love.timer.getTime() - block.time) * 1000
+	block.duration = (now - block.time) * 1000
 	block.memory = (collectgarbage("count") * 1024) - block.memory
+
+	if #self._stack == 0 then
+		--manage worst list
+		--put in right position
+		table.insert_sorted(self._worst, table.copy(self._result), function(a, b)
+			return a[1].duration > b[1].duration
+		end)
+		--trim based on expiry time
+		for i, v in ripairs(self._worst) do
+			if now - v[1].time > self._worst_period then
+				table.remove(self._worst, i)
+			end
+		end
+		--trim too many
+		if #self._worst > self._worst_count then
+			table.remove(self._worst)
+		end
+	end
 end
 
 function profiler:wrap_system(name, system)
@@ -53,6 +77,7 @@ end
 
 function profiler:hold_result()
 	self._hold = table.copy(self._result)
+	table.clear(self._worst)
 end
 
 function profiler:drop_hold()
@@ -67,17 +92,36 @@ function profiler:print_result()
 	lg.push()
 	local f = lg.getFont()
 	local line_height = f:getHeight() * f:getLineHeight()
-	for _, v in ipairs(self:result()) do
-		lg.setColor(0, 0, 0)
-		lg.rectangle("fill", -5, 0, 355, line_height)
-		lg.setColor(1, 1, 1)
+	local list_width = 355
+	local labels = {
+		"current",
+		"worst",
+	}
+	for list_i, list in ipairs(table.append_inplace({self:result()}, self._worst)) do
 		lg.push()
-		lg.translate(v.depth * 10, 0)
-		lg.print(v.name, 0, 0)
-		lg.print(("%05.2fms"):format(v.time), 150, 0)
-		lg.print(("%04.2fmb"):format(v.memory / 1024 / 1024), 250, 0)
+		for _, v in ipairs(
+			table.append_inplace({
+				{
+					name = labels[list_i] or "",
+					depth = 0,
+				}
+			}, list)
+		) do
+			lg.setColor(0, 0, 0)
+			lg.rectangle("fill", -5, 0, list_width, line_height)
+			lg.setColor(1, 1, 1)
+			lg.push()
+			lg.translate(v.depth * 10, 0)
+			lg.print(v.name, 0, 0)
+			if v.duration and v.memory then
+				lg.print(("%05.2fms"):format(v.duration), 150, 0)
+				lg.print(("%04.2fmb"):format(v.memory / 1024 / 1024), 250, 0)
+			end
+			lg.pop()
+			lg.translate(0, line_height)
+		end
 		lg.pop()
-		lg.translate(0, line_height)
+		lg.translate(list_width + 2, 0)
 	end
 	lg.pop()
 end
