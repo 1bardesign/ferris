@@ -10,26 +10,18 @@ local unique_mapping = class({
 	name = "unique_mapping",
 
 })
---(used as storage for non-weak data)
-local _MAP_VARS = setmetatable({}, {
-	__mode = "k" --only keys are weak
-})
 
 --create a new unique mapping
 function unique_mapping:new()
-	--set up the actual vars
-	_MAP_VARS[self] = {
-		current_index = 0,
-	}
-	return self
+	self.vars = {}
+	self.current_index = 0
 end
 
 --private;
 --get the next index for this mapping
 function unique_mapping:_increment()
-	local vars = _MAP_VARS[self]
-	vars.current_index = vars.current_index + 1
-	return vars.current_index
+	self.current_index = vars.current_index + 1
+	return self.current_index
 end
 
 --get or build a mapping for a passed value
