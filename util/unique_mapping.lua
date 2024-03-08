@@ -20,7 +20,7 @@ end
 --private;
 --get the next index for this mapping
 function unique_mapping:_increment()
-	self.current_index = vars.current_index + 1
+	self.current_index = self.current_index + 1
 	return self.current_index
 end
 
