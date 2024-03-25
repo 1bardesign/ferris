@@ -15,6 +15,9 @@ function profiler:new()
 end
 
 function profiler:push(name)
+	if self._hold then
+		return
+	end
 	if #self._stack == 0 then
 		--pushing a new frame
 		table.clear(self._result)
@@ -31,6 +34,10 @@ function profiler:push(name)
 end
 
 function profiler:pop(name)
+	if self._hold then
+		return
+	end
+
 	local block = table.pop(self._stack)
 	local now = love.timer.getTime()
 	assert:equal(name, block.name, "profiler block names should match")
@@ -76,16 +83,19 @@ function profiler:wrap_function(name, f)
 end
 
 function profiler:hold_result()
-	self._hold = table.copy(self._result)
-	table.clear(self._worst)
+	self._hold = true
 end
 
 function profiler:drop_hold()
 	self._hold = false
 end
 
+function profiler:clear_worst()
+	table.clear(self._worst)
+end
+
 function profiler:result()
-	return table.copy(self._hold or self._result)
+	return table.copy(self._result)
 end
 
 function profiler:print_result()
