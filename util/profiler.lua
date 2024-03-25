@@ -124,8 +124,8 @@ function profiler:print_result()
 			lg.translate(v.depth * 10, 0)
 			lg.print(v.name, 0, 0)
 			if v.duration and v.memory then
-				lg.print(("%05.2fms"):format(v.duration), 150, 0)
-				lg.print(("%04.2fmb"):format(v.memory / 1024 / 1024), 250, 0)
+				lg.printf(("%5.2fms"):format(v.duration), 100, 0, 80, "right")
+				lg.printf(("%4.2fmb"):format(v.memory / 1024 / 1024), 180, 0, 80, "right")
 			end
 			lg.pop()
 			lg.translate(0, line_height)
