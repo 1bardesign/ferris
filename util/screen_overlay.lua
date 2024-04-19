@@ -17,7 +17,7 @@ end
 function screen_overlay:fade(colour, time)
 	colour = self:_decode_colour(colour)
 	self.old_colour = {self:current_colour()}
-	self.colour = table.values(colour) --take a copy
+	self.colour = table.copy(colour) --take a copy
 	self.timer:reset(time)
 end
 
@@ -26,7 +26,7 @@ function screen_overlay:flash(colour, time)
 	colour = self:_decode_colour(colour)
 	self.colour = table.copy(colour)
 	self.old_colour = table.copy(colour)
-	colour[4] = 0
+	colour[4] = 0 --fade to zero alpha
 	self:fade(colour, time)
 end
 
@@ -56,10 +56,9 @@ end
 
 --draw the overlay
 function screen_overlay:draw()
-	local r, g, b, a = self:current_colour()
 	--render
 	love.graphics.push("all")
-	love.graphics.setColor(r, g, b, a)
+	love.graphics.setColor(self:current_colour())
 	love.graphics.origin()
 	love.graphics.rectangle("fill", 0, 0, self.size:unpack())
 	love.graphics.pop()
