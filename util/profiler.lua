@@ -14,18 +14,45 @@ function profiler:new()
 	self._hold = false
 end
 
+function profiler:_getname(name)
+	if type(name) == "string" then
+		return name
+	end
+	if not self.dinfo_cache then
+		self.dinfo_cache = setmetatable({}, {__mode = "k"}) --weak table
+	end
+	local dinfo
+	if name then
+		dinfo = self.dinfo_cache[name]
+		if not dinfo then
+			dinfo = debug.getinfo(name)
+			self.dinfo_cache[name] = dinfo
+		end
+	else
+		dinfo = debug.getinfo(3)
+	end
+	return ("%s:%d"):format(
+		table.back(dinfo.short_src:split("/")),
+		dinfo.linedefined
+	)
+end
+
 function profiler:push(name)
 	if self._hold then
 		return
 	end
+	local t = love.timer.getTime()
+	local m = (collectgarbage("count") * 1024)
 	if #self._stack == 0 then
 		--pushing a new frame
 		table.clear(self._result)
 	end
+	name = self:_getname(name)
+
 	local block = {
 		name = name,
-		time = love.timer.getTime(),
-		memory = (collectgarbage("count") * 1024),
+		time = t,
+		memory = m,
 		depth = #self._stack + 1,
 		duration = 0,
 	}
@@ -40,6 +67,7 @@ function profiler:pop(name)
 
 	local block = table.pop(self._stack)
 	local now = love.timer.getTime()
+	name = self:_getname(name)
 	assert:equal(name, block.name, "profiler block names should match")
 	block.duration = (now - block.time) * 1000
 	block.memory = (collectgarbage("count") * 1024) - block.memory
