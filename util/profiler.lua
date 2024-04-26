@@ -98,7 +98,27 @@ function profiler:result()
 	return table.copy(self._result)
 end
 
-function profiler:print_result()
+function profiler:format(r)
+	if not r then r = self._result end
+	local t = {}
+	for _, v in ipairs(r) do
+		if v.duration and v.memory then
+			table.insert(t, (("%s% -30s %5.2fms %4.2fmb"):format(
+				("| "):rep(math.max(0, v.depth-2))..("+-"):rep(v.depth > 1 and 1 or 0),
+				v.name..":",
+				v.duration,
+				v.memory / 1024 / 1024
+			)))
+		end
+	end
+	return table.concat(t, "\n")
+end
+
+function profiler:print_result(r)
+	print(self:format(r))
+end
+
+function profiler:draw_result()
 	lg.push()
 	local f = lg.getFont()
 	local line_height = f:getHeight() * f:getLineHeight()
