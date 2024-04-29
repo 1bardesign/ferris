@@ -77,11 +77,15 @@ function main_loop:new(interpolate_render)
 	 			self.frames_per_second:add()
 			end
 
-			--sweep garbage always
-			manual_gc(1e-3)
+			if self.after_frame then
+				self:after_frame()
+			else
+				--sweep garbage always
+				manual_gc(1e-3)
 
-			--give the cpu a break
-			love.timer.sleep(0.001)
+				--give the cpu a break
+				love.timer.sleep(0.001)
+			end
 		end
 	end
 end
