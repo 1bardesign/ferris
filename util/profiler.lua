@@ -70,7 +70,7 @@ function profiler:pop(name)
 	name = self:_getname(name)
 	assert:equal(name, block.name, "profiler block names should match")
 	block.duration = (now - block.time) * 1000
-	block.memory = (collectgarbage("count") * 1024) - block.memory
+	block.memory_delta = (collectgarbage("count") * 1024) - block.memory
 
 	if #self._stack == 0 then
 		--manage worst list
@@ -131,11 +131,12 @@ function profiler:format(r)
 	local t = {}
 	for _, v in ipairs(r) do
 		if v.duration and v.memory then
-			table.insert(t, (("%s% -30s %5.2fms %4.2fmb"):format(
+			table.insert(t, (("%s% -30s %5.2fms %4.2fmb (%+4.2fmb)"):format(
 				("| "):rep(math.max(0, v.depth-2))..("+-"):rep(v.depth > 1 and 1 or 0),
 				v.name..":",
 				v.duration,
-				v.memory / 1024 / 1024
+				v.memory / 1024 / 1024,
+				v.memory_delta / 1024 / 1024
 			)))
 		end
 	end
@@ -150,7 +151,7 @@ function profiler:draw_result()
 	lg.push()
 	local f = lg.getFont()
 	local line_height = f:getHeight() * f:getLineHeight()
-	local list_width = 355
+	local list_width = 390
 	local labels = {
 		"current",
 		"worst",
@@ -174,6 +175,7 @@ function profiler:draw_result()
 			if v.duration and v.memory then
 				lg.printf(("%5.2fms"):format(v.duration), 100, 0, 80, "right")
 				lg.printf(("%4.2fmb"):format(v.memory / 1024 / 1024), 180, 0, 80, "right")
+				lg.printf(("%+4.2fmb"):format(v.memory_delta / 1024 / 1024), 230, 0, 80, "right")
 			end
 			lg.pop()
 			lg.translate(0, line_height)
