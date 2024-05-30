@@ -32,6 +32,13 @@ function base.add_deferred_management(system)
 		table.remove_value(self.all, v)
 	end
 
+	local add_immediate = system.add_component_immediate or function(self, v)
+		--nop
+	end
+	local remove_immediate = system.remove_component_immediate or function(self, v)
+		--nop
+	end
+
 	local _old_update = system.update or function() end
 
 	--patch various functionality
@@ -48,11 +55,13 @@ function base.add_deferred_management(system)
 
 	function system:add(...)
 		local v = self:create_component(...)
+		add_immediate(self, v)
 		table.insert(self.to_add, v)
 		return v
 	end
 
 	function system:remove(v)
+		remove_immediate(self, v)
 		table.insert(self.to_remove, v)
 	end
 
