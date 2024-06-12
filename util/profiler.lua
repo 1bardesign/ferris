@@ -37,11 +37,12 @@ function profiler:_getname(name)
 	)
 end
 
-function profiler:query_vram()
+function profiler:query_graphics()
 	if not love.graphics then
 		return 0
 	end
-	return love.graphics.getStats().texturememory
+	local s = love.graphics.getStats()
+	return s.texturememory, s.drawcalls
 end
 
 function profiler:push(name)
@@ -56,11 +57,13 @@ function profiler:push(name)
 	end
 	name = self:_getname(name)
 
+	local vram, draws = self:query_graphics()
 	local block = {
 		name = name,
 		time = t,
 		memory = m,
-		vram = self:query_vram(),
+		vram = vram,
+		draws = draws,
 		depth = #self._stack + 1,
 		duration = 0,
 	}
@@ -79,7 +82,9 @@ function profiler:pop(name)
 	assert:equal(name, block.name, "profiler block names should match")
 	block.duration = (now - block.time) * 1000
 	block.memory_delta = (collectgarbage("count") * 1024) - block.memory
-	block.vram_delta = (self:query_vram() - block.vram)
+	local vram, draws = self:query_graphics()
+	block.vram_delta = (vram - block.vram)
+	block.draw_delta = (draws - block.draws)
 
 	if #self._stack == 0 then
 		--manage worst list
@@ -140,14 +145,15 @@ function profiler:format(r)
 	local t = {}
 	for _, v in ipairs(r) do
 		if v.duration and v.memory then
-			table.insert(t, (("%s% -30s %5.2fms %4.2fmb (%+4.2fmb) %4.2fvmb (%+4.2fvmb)"):format(
+			table.insert(t, (("%s% -30s %5.2fms %4.2fmb (%+4.2fmb) %4.2fvmb (%+4.2fvmb) %d draws"):format(
 				("| "):rep(math.max(0, v.depth-2))..("+-"):rep(v.depth > 1 and 1 or 0),
 				v.name..":",
 				v.duration,
 				v.memory / 1024 / 1024,
 				v.memory_delta / 1024 / 1024,
 				v.vram / 1024 / 1024,
-				v.vram_delta / 1024 / 1024
+				v.vram_delta / 1024 / 1024,
+				v.draw_delta
 			)))
 		end
 	end
@@ -184,11 +190,12 @@ function profiler:draw_result()
 			lg.translate(v.depth * 10, 0)
 			lg.print(v.name, 0, 0)
 			if v.duration and v.memory then
-				lg.printf(("%5.2fms"):format(v.duration), 100, 0, 50, "right")
-				lg.printf(("%4.0fmb"):format(v.memory / 1024 / 1024), 150, 0, 50, "right")
-				lg.printf(("%+4.2fmb"):format(v.memory_delta / 1024 / 1024), 200, 0, 50, "right")
-				lg.printf(("%4.0fvmb"):format(v.vram / 1024 / 1024), 250, 0, 50, "right")
-				lg.printf(("%+4.2fvmb"):format(v.vram_delta / 1024 / 1024), 300, 0, 50, "right")
+				lg.printf(("%5.2fms"):format(v.duration), 90, 0, 45, "right")
+				lg.printf(("%4.0fmb"):format(v.memory / 1024 / 1024), 145, 0, 45, "right")
+				lg.printf(("%+4.2fmb"):format(v.memory_delta / 1024 / 1024), 190, 0, 45, "right")
+				lg.printf(("%4.0fvmb"):format(v.vram / 1024 / 1024), 225, 0, 45, "right")
+				lg.printf(("%+4.2fvmb"):format(v.vram_delta / 1024 / 1024), 270, 0, 45, "right")
+				lg.printf(("%dd"):format(v.draw_delta), 315, 0, 40, "right")
 			end
 			lg.pop()
 			lg.translate(0, line_height)
