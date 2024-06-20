@@ -7,8 +7,7 @@ local screen_overlay = class({
 })
 
 function screen_overlay:new(size)
-	size = size or vec2(love.graphics.getDimensions())
-	self.size = size
+	self.size = size or false
 	self.old_colour = {0, 0, 0, 0}
 	self.colour = {0, 0, 0, 0}
 	self.timer = timer()
@@ -60,7 +59,11 @@ function screen_overlay:draw()
 	love.graphics.push("all")
 	love.graphics.setColor(self:current_colour())
 	love.graphics.origin()
-	love.graphics.rectangle("fill", 0, 0, self.size:unpack())
+	if self.size then
+		love.graphics.rectangle("fill", 0, 0, self.size:unpack())
+	else
+		love.graphics.rectangle("fill", 0, 0, love.graphics.getDimensions())
+	end
 	love.graphics.pop()
 end
 
