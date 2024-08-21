@@ -106,6 +106,9 @@ function crossfade:transition(source, time)
 	local volume = math.min(max, self._volume)
 	table.insert(self._lerps, crossfade_lerp(source, volume, time))
 	source:play()
+	
+	--update both lerps
+	self:update(0)
 end
 
 --check if the crossfade is "idling"
