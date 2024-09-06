@@ -19,7 +19,7 @@ function profiler:_getname(name)
 		return name
 	end
 	if not self.dinfo_cache then
-		self.dinfo_cache = setmetatable({}, {__mode = "k"}) --weak table
+		self.dinfo_cache = setmetatable({}, {__mode = "kv"}) --weak table
 	end
 	local dinfo
 	if name then
